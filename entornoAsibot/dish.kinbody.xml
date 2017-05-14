@@ -1,0 +1,26 @@
+<KinBody name="dish">
+    <RotationAxis>1 0 0 90</RotationAxis>
+    <Body type="dynamic">
+    <Geom type="cylinder">
+        <translation>0 -0.028 0</translation>
+        <radius>0.124</radius>
+        <height>0.003</height>
+	<diffuseColor>0.1 0.9 0.1</diffuseColor>
+    </Geom>
+    <Geom type="cylinder">
+        <translation>0 -0.045 0</translation>
+        <radius>0.08</radius>
+        <height>0.02</height>
+	<diffuseColor>0.5 0.5 0.5</diffuseColor>
+    </Geom>
+    <Geom type="sphere">
+        <translation>-0.01 -0.06 0</translation>
+        <radius>0.002</radius>
+        <render>./ivs/plato.3ds 0.01</render>	<!--Modelo 3D del objeto a añadir-->
+    </Geom>
+    	<mass type="sphere">
+        <total>1</total>
+    	<radius>1</radius>
+    	</mass>
+    </Body>
+</KinBody>

@@ -1,0 +1,38 @@
+<KinBody name="bottle">
+  <Body type="dynamic">
+
+   <Geom type="cylinder">
+      <RotationAxis>1 0 0 -90</RotationAxis>
+      <translation>0 0 0.02</translation>
+      <radius>0.02</radius>
+      <height>0.15</height>
+      <diffuseColor>0.5 0.5 0.5</diffuseColor>
+    </Geom>
+      
+    <Geom type="cylinder">
+      <RotationAxis>1 0 0 -90</RotationAxis>
+      <translation>0 0 0.05</translation>
+      <radius>0.008</radius>
+      <height>0.17</height>
+      <diffuseColor>0.5 0.5 0.5</diffuseColor>
+    </Geom>
+
+    <Geom type="cylinder">
+      <RotationAxis>1 0 0 -90</RotationAxis>
+      <translation>0 0 0.01</translation>
+      <radius>0.028</radius>
+      <height>0.125</height>
+      <diffuseColor>0.9 0.1 0.1</diffuseColor>
+    </Geom>
+    <Geom type="sphere">
+      <RotationAxis>1 0 0 -180</RotationAxis>
+      <translation>-0.0007 0 0.11</translation>
+      <radius>0.002</radius>
+      <Render>./ivs/botella.3ds 0.01</Render>
+    </Geom>
+    <mass type="sphere">
+      <total>1</total>
+      <radius>1</radius>
+    </mass>
+  </Body>
+</KinBody>

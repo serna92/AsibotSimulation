@@ -1,0 +1,52 @@
+Objetos en el escenario (respecto al mundo)
+
+-Lata roja
+
+1.1791 0.4445 0.865
+
+-Vaso
+
+0.8 0.2445 0.865
+
+-Plato
+
+0.95 0.4 0.865
+
+-Botella
+
+0.2445 0.8 0.865
+
+-Base robot
+
+1 1.015 0.7491
+
+//////////////////////////////////////////
+
+P1 = [-0.2,-0.2,0.8,90,0]
+P2 = [-0.5,-0.5,0.8,90,0]
+
+//////////////////////////////////////////
+
+*Coords. aproximacion lata roja
+
+[0.14,-0.4,0.5,90,0]
+
+
+*Coords. aproximacion labios
+
+[0.2,0,0.6,90,0]
+
+
+*Coords. aproximacion plato
+
+[-0.05,-0.4,0.6,90,0]
+
+
+*Coords. aproximacion botella
+
+[-0.6,-0.18,0.5,90,0]
+
+
+*Coords. aproximacion vaso
+
+[-0.4,-0.5,0.4,90,0]

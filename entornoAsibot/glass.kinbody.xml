@@ -1,0 +1,21 @@
+<KinBody name="glass">
+  <Body type="dynamic">
+    <Geom type="cylinder">
+      <RotationAxis>1 0 0 -90</RotationAxis>
+      <translation>0 0 0</translation>
+      <radius>0.047</radius>
+      <height>0.100</height>
+      <diffuseColor>0.1 0.1 0.9</diffuseColor>
+    </Geom>
+    <Geom type="sphere">
+      <RotationAxis>1 0 0 90</RotationAxis>
+      <translation>0 0 -0.06</translation>
+      <radius>0.002</radius>
+      <Render>./ivs/vaso.3ds 0.01</Render>
+    </Geom>
+    <mass type="sphere">
+      <total>1</total>
+      <radius>1</radius>
+    </mass>
+  </Body>
+</KinBody>
