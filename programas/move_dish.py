@@ -2,6 +2,21 @@
 # NIA: 100285275
 
 from AsibotPy import *
+from openravepy import *
+
+env = Environment()
+env.SetViewer('qtcoin')
+env.Load('definitivo/AsibotSimulation/entornoAsibot/asibot_kitchen.env.xml')
+
+redCan = env.GetKinBody('redCan')
+glass = env.GetKinBody('glass')
+bottle = env.GetKinBody('bottle')
+
+redCan.SetVisible(False)
+glass.SetVisible(False)
+bottle.SetVisible(False)
+
+raw_input('\n' + 'Press Enter to close')
 
 rpc = yarp.RpcClient()
 

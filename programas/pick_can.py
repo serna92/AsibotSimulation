@@ -2,6 +2,26 @@
 # NIA: 100285275
 
 from AsibotPy import *
+from openravepy import *
+
+env = Environment()
+env.SetViewer('qtcoin')
+env.Load('definitivo/AsibotSimulation/entornoAsibot/asibot_kitchen.env.xml')
+
+dish = env.GetKinBody('dish')
+glass = env.GetKinBody('glass')
+bottle = env.GetKinBody('bottle')
+
+dish.SetVisible(False)
+glass.SetVisible(False)
+bottle.SetVisible(False)
+
+raw_input('\n' + 'Press Enter to close')
+
+robot = env.GetRobots()[0]
+RaveSetDebugLevel(DebugLevel.Debug)
+basemanip = interfaces.BaseManipulation(robot, plannername = 'BiRRT')
+goal = []
 
 rpc = yarp.RpcClient()
 
@@ -55,10 +75,27 @@ print 'hello, robot!'
 simCart.movl(home)  # defaults to 20 s
 simCart.wait()      # wait for movement
 
-simCart.movj(P1)
-simCart.wait()
-simCart.movj(P_lata)
-simCart.wait()
+
+simCart.inv(P1, goal)	# [71.56505117707799, 38.48040850914066, 53.40043240624258, -1.8808409153832386, 0.0]
+
+
+print goal
+
+with robot: 
+	robot.SetActiveDOFValues(goal) 
+	check = env.CheckCollision(robot) 
+	print check 
+
+traj = basemanip.MoveManipulator(goal = goal,execute = False,maxiter=3000,steplength=0.15,maxtries=2)
+raveLogInfo('traj has %d waypoints, last waypoint is: %s'%(traj.GetNumWaypoints(),repr(traj.GetWaypoint(-1))))
+
+raw_input('\n' + 'Press Enter to close')
+
+
+#simCart.movj(P1)
+#simCart.wait()
+#simCart.movj(P_lata)
+#simCart.wait()
 
 simCart.movl(P2)
 simCart.wait()
@@ -103,3 +140,5 @@ simCart.wait()
 
 print 'done!'
 simCart.close()
+
+env.Reset()
