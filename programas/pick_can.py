@@ -13,7 +13,7 @@ def simulation():
 	env.Load('AsibotSimulation/entornoAsibot/asibot_kitchen.env.xml')
 
 	redCan = env.ReadKinBodyXMLFile('AsibotSimulation/entornoAsibot/redCan.kinbody.xml')
-	env.AddKinBody(redCan)
+	env.Add(redCan)
 
 	raw_input('\n' + 'Press Enter to close')
 

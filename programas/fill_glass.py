@@ -13,10 +13,10 @@ def simulation():
 	env.Load('AsibotSimulation/entornoAsibot/asibot_kitchen.env.xml')
 
 	glass = env.ReadKinBodyXMLFile('AsibotSimulation/entornoAsibot/glass.kinbody.xml')
-	env.AddKinBody(glass)
+	env.Add(glass)
 
 	bottle = env.ReadKinBodyXMLFile('AsibotSimulation/entornoAsibot/bottle.kinbody.xml')
-	env.AddKinBody(bottle)
+	env.Add(bottle)
 
 	raw_input('\n' + 'Press Enter to close')
 

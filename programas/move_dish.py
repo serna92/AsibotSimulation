@@ -13,7 +13,7 @@ def simulation():
 	env.Load('AsibotSimulation/entornoAsibot/asibot_kitchen.env.xml')
 
 	dish = env.ReadKinBodyXMLFile('AsibotSimulation/entornoAsibot/dish.kinbody.xml')
-	env.AddKinBody(dish)
+	env.Add(dish)
 
 	raw_input('\n' + 'Press Enter to close')
 
