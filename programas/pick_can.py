@@ -9,7 +9,7 @@ from openravepy import *
 def simulation():
 
 	env = Environment()
-	env.SetViewer('qtcoin')
+	#env.SetViewer('qtcoin')
 	env.Load('AsibotSimulation/entornoAsibot/asibot_kitchen.env.xml')
 
 	redCan = env.ReadKinBodyXMLFile('AsibotSimulation/entornoAsibot/redCan.kinbody.xml')
@@ -75,26 +75,33 @@ def simulation():
 	simCart.wait()      # wait for movement
 
 
-	simCart.inv(P1, goal)	# [71.56505117707799, 38.48040850914066, 53.40043240624258, -1.8808409153832386, 0.0]
+	simCart.inv(P1, goal)	# [71.56505117707799, 38.48040850914066, 53.40043240624258, -1.8808409153832386, 0.0] In degrees
 
-
+	for i in range (0, len(goal)):
+	   goal[i] = goal[i] / 360 * 2 * 3.141593
+	   # [1.2490457723951560176, 0.67160982599528096237, 0.93201336747529917037, -0.032826866679580145314, 0.0] In radians
 	print goal
 
-	with robot: 
-		robot.SetActiveDOFValues(goal) 
-		check = env.CheckCollision(robot) 
-		print check 
-
-	traj = basemanip.MoveManipulator(goal = goal,execute = False,maxiter=3000,steplength=0.15,maxtries=2)
-	raveLogInfo('traj has %d waypoints, last waypoint is: %s'%(traj.GetNumWaypoints(),repr(traj.GetWaypoint(-1))))
+	traj = basemanip.MoveManipulator(goal = goal,execute = False,maxiter=3000,steplength=0.15,maxtries=2,outputtrajobj=True)
+	#raveLogInfo('traj has %d waypoints, last waypoint is: %s'%(traj.GetNumWaypoints(),repr(traj.GetWaypoint(-1))))
+        
+	n = traj.GetNumWaypoints()
+	for i in range(0,n):
+	   print str(traj.GetWaypoint(i)[0:5]) + '\n'
+	   simCart.movj(traj.GetWaypoint(i)/2/3.141593*360)
+           simCart.wait()
 
 	raw_input('\n' + 'Press Enter to close')
 
+	#robot.GetController().SetPath(traj)
+        #robot.WaitForController(0)
+
+        raw_input('\n' + 'Press Enter to close')
 
 	#simCart.movj(P1)
 	#simCart.wait()
-	#simCart.movj(P_lata)
-	#simCart.wait()
+	simCart.movj(P_lata)
+	simCart.wait()
 
 	simCart.movl(P2)
 	simCart.wait()
@@ -140,7 +147,9 @@ def simulation():
 	print 'done!'
 	simCart.close()
 
-	env.Reset()
+	env.Destroy()
+
+	raw_input('\n' + 'Press Enter to close')
 
 if __name__ == '__main__':
 	simulation()
