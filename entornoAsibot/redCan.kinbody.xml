@@ -1,5 +1,6 @@
 <KinBody name="redCan">
   <Body type="dynamic">
+  <translation>1.2177 0.095 0.865</translation>
    <Geom type="cylinder">
       <RotationAxis>1 0 0 -90</RotationAxis>
       <translation>0 0 -0.005</translation>
