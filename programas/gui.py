@@ -221,8 +221,6 @@ def start():
     global x1, x2, y1, y2
     global task1, task2, task3
 
-    print "WARNING: requires a running instance of cartesianServer"
-
     if selectedOption == 1 and x1 != -1:
 	
         tree = et.parse("AsibotSimulation/entornoAsibot/redCan.kinbody.xml")
@@ -236,6 +234,7 @@ def start():
         tree2.write("AsibotSimulation/entornoAsibot/asibot.robot.xml")
         tree3.write("AsibotSimulation/entornoAsibot/wheelchair.kinbody.xml")
 
+	print "WARNING: requires a running instance of cartesianServer"
 	task1.simulation()
 
     if selectedOption == 2 and x1 != -1 and x2 != -1:
@@ -249,11 +248,12 @@ def start():
 
         tree3 = et.parse("AsibotSimulation/entornoAsibot/asibot.robot.xml")
 	tree4 = et.parse("AsibotSimulation/entornoAsibot/wheelchair.kinbody.xml")
-        tree3.findall("./translation")[0].text = "1 1.215 0.7491"
-        tree4.findall("./translation")[0].text = "1.3 1.25 0.7"
+        tree3.findall("./translation")[0].text = "1.3 1.215 0.7491"
+        tree4.findall("./translation")[0].text = "1.6 1.25 0.7"
         tree3.write("AsibotSimulation/entornoAsibot/asibot.robot.xml")
         tree4.write("AsibotSimulation/entornoAsibot/wheelchair.kinbody.xml")
 
+	print "WARNING: requires a running instance of cartesianServer"
 	task2.simulation()
 
     if selectedOption == 3 and x1 != -1:
@@ -269,6 +269,7 @@ def start():
         tree2.write("AsibotSimulation/entornoAsibot/asibot.robot.xml")
         tree3.write("AsibotSimulation/entornoAsibot/wheelchair.kinbody.xml")
 
+	print "WARNING: requires a running instance of cartesianServer"
 	task3.simulation()
     
 # Loading images.

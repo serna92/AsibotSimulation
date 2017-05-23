@@ -1,5 +1,5 @@
 <KinBody name="wheelchairKinbody">
-    <translation>1.6 1.35 0.7</translation>
+    <translation>1.3 1.25 0.7</translation>
     <Body name="chair" type="static">
         <RotationAxis>1 0 0 -90</RotationAxis>
         <Geom type="trimesh">

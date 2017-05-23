@@ -1,7 +1,5 @@
 # Miguel Serna Agudo
-# NIA: 100285275
-
-# Find (\n|^) as regular expression and replace \n   
+# NIA: 100285275  
 
 #!/usr/bin/python
 
@@ -82,8 +80,6 @@ def simulation():
    movinitial(axes, mode, pos)
 
    simCart.wait()
-
-   print ('\n' + 'Done' + '\n')
 
    raw_input('Press Enter to end simulation' + '\n')
 

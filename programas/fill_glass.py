@@ -1,136 +1,118 @@
 # Miguel Serna Agudo
-# NIA: 100285275
+# NIA: 100285275  
 
 #!/usr/bin/python
 
-from AsibotPy import *
-from openravepy import *
+from common_functions import *
 
 def simulation():
 
-	env = Environment()
-	env.SetViewer('qtcoin')
-	env.Load('AsibotSimulation/entornoAsibot/asibot_kitchen.env.xml')
+   dd, pos, vel, enc, mode, axes = initRavebot()
+   env, basemanip = initOpenRave()
 
-	glass = env.ReadKinBodyXMLFile('AsibotSimulation/entornoAsibot/glass.kinbody.xml')
-	env.Add(glass)
+   rpc = yarp.RpcClient()
+   rpc.open('/command/ravebot/world')
+   yarp.Network.connect('/command/ravebot/world', '/ravebot/world')
 
-	bottle = env.ReadKinBodyXMLFile('AsibotSimulation/entornoAsibot/bottle.kinbody.xml')
-	env.Add(bottle)
+   grabObj1, releaseObj1, addObj1, delObjs, whereisObj1, whereisRobot, whereisTCP = defineCommands('glass', 'asibot')
+   grabObj2, releaseObj2, addObj2, delObjs, whereisObj2, whereisRobot, whereisTCP = defineCommands('bottle', 'asibot')
 
-	raw_input('\n' + 'Press Enter to close')
+   res = yarp.Bottle()
 
-	rpc = yarp.RpcClient()
+   rpc.write(addObj1, res)
+   rpc.write(addObj2, res)
 
-	rpc.open('/command/ravebot/world')
+   #######################################
 
-	yarp.Network.connect('/command/ravebot/world', '/ravebot/world')
+   rpc.write(whereisObj1, res)
 
-	#######################################
+   glass_position = []
 
-	res = yarp.Bottle()
+   for i in range(0,3):
+      glass_position.append(res.get(0).asList().get(i).asDouble())
 
-	cmd1 = yarp.Bottle()
+   rpc.write(whereisObj2, res)
 
-	cmd1.addString('world')
-	cmd1.addString('grab')
-	cmd1.addString('obj')
-	cmd1.addString('bottle')
-	cmd1.addInt(1)
+   bottle_position = []
 
-	cmd2 = yarp.Bottle()
+   for i in range(0,3):
+      bottle_position.append(res.get(0).asList().get(i).asDouble())
 
-	cmd2.addString('world')
-	cmd2.addString('grab')
-	cmd2.addString('obj')
-	cmd2.addString('bottle')
-	cmd2.addInt(0)  
+   rpc.write(whereisRobot, res)
 
-	#######################################
+   robot_base = []
 
-	home=[0,0,1.4,0,0]
+   for i in range(0,3):
+      robot_base.append(res.get(0).asList().get(i).asDouble())
 
-	P1=[0.3,0.9,0.6,90,0]
-	P_botella=[0.6,0.4,0.5,90,0]
-	P_vaso=[0.3,0.9,0.4,90,0]
 
-	P2=[0.6,0.4,0.3,90,0]
-	P3=[0.7,0.5,0.3,90,0]
+   rpc.write(whereisTCP, res)
 
-	P4=[0.3,0.8,0.4,90,0]
-	P5=[0.3,0.8,0.37,90,0]
-	P6=[0.3,0.8,0.4,90,-75]
+   TCPPosition = []
 
-	#######################################
+   for i in range(0,3):
+      TCPPosition.append(res.get(0).asList().get(i).asDouble())
 
-	simCart = CartesianClient()
-	simCart.open('/ravebot')
-	# use '/canbot' for real
+   #######################################
 
-	#######################################
+   home=[0,0,1.4,0,0]
 
-	print 'hello, robot!'
-	simCart.movl(home)  # defaults to 20 s
-	simCart.wait()      # wait for movement
-	simCart.movj(P1)
-	simCart.wait()
-	simCart.movj(P_botella)
-	simCart.wait()
+   P1=[0.3,0.9,0.6,90,0]
+   P_botella=[0.6,0.4,0.5,90,0]
+   P_vaso=[0.3,0.9,0.4,90,0]
 
-	simCart.movl(P2)
-	simCart.wait()
-	simCart.movl(P3)
-	simCart.wait()
+   P2=[0.6,0.4,0.3,90,0]
+   P3=[0.7,0.5,0.3,90,0]
 
-	rpc.write(cmd1, res)	# Agarrar la botella.
+   P4=[0.3,0.8,0.4,90,0]
+   P5=[0.3,0.8,0.37,90,0]
+   P6=[0.3,0.8,0.4,90,-75]
 
-	simCart.movl(P2)
-	simCart.wait()
-	simCart.movl(P_botella)
-	simCart.wait()
+   #######################################
 
-	simCart.movj(P_vaso)
-	simCart.wait()
+   simCart = CartesianClient()
+   simCart.open('/ravebot')
+   # use '/canbot' for real
 
-	simCart.movl(P4)
-	simCart.wait()
-	simCart.movl(P5)
-	simCart.wait()
+   #######################################
 
-	simCart.movl(P6)	# Rellenar vaso.
-	simCart.wait()
-	simCart.movl(P5)
-	simCart.wait()
+   print ('\n' + 'Starting Simulation' + '\n')
 
-	simCart.movl(P4)
-	simCart.wait()
-	simCart.movl(P_vaso)
-	simCart.wait()
+   simCart.movl(home)  # defaults to 20 s
+   simCart.wait()      # wait for movement
 
-	simCart.movj(P_botella)
-	simCart.wait()
+   print bottle_position
 
-	simCart.movl(P2)
-	simCart.wait()
-	simCart.movl(P3)
-	simCart.wait()
+   targetpoint = calculateTargetpoint(bottle_position, robot_base, 0.03, 0.2, 0.2)
+   movj(targetpoint, axes, mode, pos, simCart, basemanip)
 
-	rpc.write(cmd2, res)	# Soltar la botella.
+   movl(targetpoint, simCart, 0.02, 0.15, 0.05, bottle_position, TCPPosition, rpc, grabObj2, releaseObj2, res, 1, 0)	# Grab bottle
 
-	simCart.movl(P2)
-	simCart.wait()
-	simCart.movl(P_botella)
-	simCart.wait()
+   glass_position[0] -= 0.18	# Targetpoint desired to be at the right of the glass
+   glass_position[1] -= 0.1
+   glass_position[2] += 0.03
 
-	simCart.movj(P1)
-	simCart.wait()
-	simCart.movj(home)
-	simCart.wait()
+   targetpoint2 = calculateTargetpoint(glass_position, robot_base, 0.03, 0.2, 0.2)
+   movj(targetpoint2, axes, mode, pos, simCart, basemanip)
 
-	#######################################
+   tiltObj(targetpoint2, simCart, 75)	# Fill glass
 
-	print 'done!'
-	simCart.close()
+   movj(targetpoint, axes, mode, pos, simCart, basemanip)
+
+   movl(targetpoint, simCart, 0.02, 0.15, 0.05, bottle_position, TCPPosition, rpc, grabObj2, releaseObj2, res, 2, 0)	# Release bottle
+
+   movinitial(axes, mode, pos)
+
+   simCart.wait()
+
+   raw_input('Press Enter to end simulation' + '\n')
+
+   rpc.write(delObjs, res)
+
+   #######################################
+
+   simCart.close()
+
 
 if __name__ == '__main__':
-	simulation();
+   simulation()

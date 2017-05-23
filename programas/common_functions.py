@@ -2,6 +2,7 @@
 
 from AsibotPy import *
 from openravepy import *
+import math
 
 
 def initRavebot():
@@ -28,6 +29,8 @@ def initOpenRave():
 
    env = Environment()
    env.Load('AsibotSimulation/entornoAsibot/asibot_kitchen.env.xml')
+   env.add('asibot.robot.xml')
+   env.add('weelchair.kinbody.xml')
    robot = env.GetRobots()[0]
    basemanip = interfaces.BaseManipulation(robot, plannername = 'BiRRT')
 
@@ -100,19 +103,25 @@ def movj(targetpoint, axes, mode, pos, simCart, basemanip):
 
 
    goal = []
-
+   print targetpoint
    simCart.inv(targetpoint, goal)
 
    for i in range (0, len(goal)):
+      if math.isnan(goal[i]):
+         print 'ERROR: Targetpoint is out of range'
+         simCart.close()
+         return False
+
       goal[i] = goal[i] / 360 * 2 * 3.141593	# Change degrees --> radians
 
+   print goal
    # Get a valid trajectory
 
    traj = basemanip.MoveManipulator(goal = goal, execute = False, maxiter = 3000, steplength = 0.15, maxtries = 3, outputtrajobj = True)
 
    n = traj.GetNumWaypoints()
 
-   raveLogInfo('traj has %d waypoints, last waypoint is: %s'%(traj.GetNumWaypoints(),repr(traj.GetWaypoint(-1)[0:5])))
+   raveLogInfo('traj has %d waypoints'%(traj.GetNumWaypoints()))
 
    for i in range(0,axes): mode.setPositionMode(i)
 
@@ -121,11 +130,11 @@ def movj(targetpoint, axes, mode, pos, simCart, basemanip):
       waypoint = []
       for j in range(0, axes):
          waypoint.append(traj.GetWaypoint(i)[j] / 2 / 3.141593 * 360)	# Change radians --> degrees
-      pos.positionMove(0,waypoint[0])
-      pos.positionMove(1,waypoint[1])
-      pos.positionMove(2,waypoint[2])
-      pos.positionMove(3,waypoint[3])
       pos.positionMove(4,waypoint[4])
+      pos.positionMove(3,waypoint[3])
+      pos.positionMove(2,waypoint[2])
+      pos.positionMove(1,waypoint[1])
+      pos.positionMove(0,waypoint[0])
       
    while True:
       if pos.checkMotionDone():

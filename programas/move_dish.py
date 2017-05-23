@@ -1,8 +1,6 @@
 # Miguel Serna Agudo
 # NIA: 100285275
 
-# Find (\n|^) as regular expression and replace \n   
-
 #!/usr/bin/python
 
 from common_functions import *
@@ -78,8 +76,6 @@ def simulation():
    movinitial(axes, mode, pos)
 
    simCart.wait()
-
-   print ('\n' + 'Done' + '\n')
 
    raw_input('Press Enter to end simulation' + '\n')
 

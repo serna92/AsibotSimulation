@@ -1,7 +1,6 @@
 <KinBody name="bottle">
   <Body type="dynamic">
-  <translation>0.2445 0.8 0.865</translation>
-
+  <translation>0.765 0.317 0.865</translation>
    <Geom type="cylinder">
       <RotationAxis>1 0 0 -90</RotationAxis>
       <translation>0 0 0.02</translation>
