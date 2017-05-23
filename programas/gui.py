@@ -10,6 +10,7 @@ from Tkinter import *
 from PIL import Image, ImageTk
 import Pmw
 from xml.etree import ElementTree as et
+from common_functions import *
 
 # Import modules.
 
@@ -28,6 +29,7 @@ x1 = -1
 y1 = -1
 x2 = -1
 y2 = -1
+
 
 root = Tk()
 root.title("Asibot Task Simulator")
@@ -103,8 +105,8 @@ def placeMainObj(event):
       if event.y < 182 and event.y > 40:
          if event.x < (44062 - 33 * event.y) / 142 and event.x > (13390 - 33 * event.y) / 142:
             redCircle = canvas.create_oval(event.x - 2, event.y - 2, event.x + 2, event.y + 2, fill = "red")
-	    x1 = (400 - event.x) * scale_x + x_offset
-            y1 = event.y * scale_y + y_offset
+	    x1 = round((400 - event.x) * scale_x + x_offset, 3)
+            y1 = round(event.y * scale_y + y_offset, 3)
 	    placedObjsLabel(selectedOption, x1, y1)
 
          else:
@@ -140,8 +142,8 @@ def placeSecondObj(event):
       if event.y < 182 and event.y > 40:
          if event.x < (44062 - 33 * event.y) / 142 and event.x > (13390 - 33 * event.y) / 142:
 	    greenCircle = canvas.create_oval(event.x - 2, event.y - 2, event.x + 2, event.y + 2, fill = "green")
-	    x2 = (400 - event.x) * scale_x + x_offset
-            y2 = event.y * scale_y + y_offset
+	    x2 = round((400 - event.x) * scale_x + x_offset, 3)
+            y2 = round(event.y * scale_y + y_offset, 3)
 	    placedObjsLabel2(selectedOption, x2, y2)
 
          else:
@@ -218,12 +220,21 @@ def start():
     global selectedOption
     global x1, x2, y1, y2
     global task1, task2, task3
-    
+
+    print "WARNING: requires a running instance of cartesianServer"
+
     if selectedOption == 1 and x1 != -1:
 	
         tree = et.parse("AsibotSimulation/entornoAsibot/redCan.kinbody.xml")
         tree.findall(".//translation")[0].text = str(x1) + " " + str(y1) + " 0.865"
         tree.write("AsibotSimulation/entornoAsibot/redCan.kinbody.xml")
+
+        tree2 = et.parse("AsibotSimulation/entornoAsibot/asibot.robot.xml")
+	tree3 = et.parse("AsibotSimulation/entornoAsibot/wheelchair.kinbody.xml")
+        tree2.findall("./translation")[0].text = "1.3 1.315 0.7491"
+        tree3.findall("./translation")[0].text = "1.6 1.35 0.7"
+        tree2.write("AsibotSimulation/entornoAsibot/asibot.robot.xml")
+        tree3.write("AsibotSimulation/entornoAsibot/wheelchair.kinbody.xml")
 
 	task1.simulation()
 
@@ -236,6 +247,13 @@ def start():
         tree.write("AsibotSimulation/entornoAsibot/glass.kinbody.xml")
         tree2.write("AsibotSimulation/entornoAsibot/bottle.kinbody.xml")
 
+        tree3 = et.parse("AsibotSimulation/entornoAsibot/asibot.robot.xml")
+	tree4 = et.parse("AsibotSimulation/entornoAsibot/wheelchair.kinbody.xml")
+        tree3.findall("./translation")[0].text = "1 1.215 0.7491"
+        tree4.findall("./translation")[0].text = "1.3 1.25 0.7"
+        tree3.write("AsibotSimulation/entornoAsibot/asibot.robot.xml")
+        tree4.write("AsibotSimulation/entornoAsibot/wheelchair.kinbody.xml")
+
 	task2.simulation()
 
     if selectedOption == 3 and x1 != -1:
@@ -244,9 +262,15 @@ def start():
         tree.findall(".//translation")[0].text = str(x1) + " " + str(y1) + " 0.865"
         tree.write("AsibotSimulation/entornoAsibot/dish.kinbody.xml")
 
+        tree2 = et.parse("AsibotSimulation/entornoAsibot/asibot.robot.xml")
+	tree3 = et.parse("AsibotSimulation/entornoAsibot/wheelchair.kinbody.xml")
+        tree2.findall("./translation")[0].text = "1 1.215 0.7491"
+        tree3.findall("./translation")[0].text = "1.3 1.25 0.7"
+        tree2.write("AsibotSimulation/entornoAsibot/asibot.robot.xml")
+        tree3.write("AsibotSimulation/entornoAsibot/wheelchair.kinbody.xml")
+
 	task3.simulation()
-
-
+    
 # Loading images.
 
 

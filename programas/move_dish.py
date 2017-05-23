@@ -1,125 +1,94 @@
 # Miguel Serna Agudo
 # NIA: 100285275
 
+# Find (\n|^) as regular expression and replace \n   
+
 #!/usr/bin/python
 
-from AsibotPy import *
-from openravepy import *
+from common_functions import *
 
 def simulation():
 
-	env = Environment()
-	env.SetViewer('qtcoin')
-	env.Load('AsibotSimulation/entornoAsibot/asibot_kitchen.env.xml')
+   dd, pos, vel, enc, mode, axes = initRavebot()
+   env, basemanip = initOpenRave()
 
-	dish = env.ReadKinBodyXMLFile('AsibotSimulation/entornoAsibot/dish.kinbody.xml')
-	env.Add(dish)
+   rpc = yarp.RpcClient()
+   rpc.open('/command/ravebot/world')
+   yarp.Network.connect('/command/ravebot/world', '/ravebot/world')
 
-	raw_input('\n' + 'Press Enter to close')
+   grab, release, add, delObjs, whereisObj, whereisRobot, whereisTCP = defineCommands('dish', 'asibot')
 
-	rpc = yarp.RpcClient()
+   res = yarp.Bottle()
 
-	rpc.open('/command/ravebot/world')
+   rpc.write(add, res)
 
-	yarp.Network.connect('/command/ravebot/world', '/ravebot/world')
+   #######################################
 
-	#######################################
+   rpc.write(whereisObj, res)
 
-	res = yarp.Bottle()
+   dish_position = []
 
-	cmd1 = yarp.Bottle()
+   for i in range(0,3):
+      dish_position.append(res.get(0).asList().get(i).asDouble())
 
-	cmd1.addString('world')
-	cmd1.addString('grab')
-	cmd1.addString('obj')
-	cmd1.addString('dish')
-	cmd1.addInt(1)
+   rpc.write(whereisRobot, res)
 
-	cmd2 = yarp.Bottle()
+   robot_base = []
 
-	cmd2.addString('world')
-	cmd2.addString('grab')
-	cmd2.addString('obj')
-	cmd2.addString('dish')
-	cmd2.addInt(0)  
-
-	#######################################
-
-	home=[0,0,1.4,0,0]
-
-	P1=[0.3,0.9,0.6,90,0]
-	P2=[0.05,0.5,0.6,90,0]
-	P3=[0.05,0.5,0.75,90,0]
-
-	P_plato=[0.05,0.7,0.4,90,0]
-	P_cajon=[0.05,0.8,0.75,90,0]
-
-	P4=[0.05,0.7,0.25,90,0]
-	P5=[0.05,0.75,0.25,90,0]
-
-	P6=[0.05,0.95,0.75,90,0]
-	P7=[0.05,0.95,0.68,90,0]
-
-	#######################################
-
-	simCart = CartesianClient()
-	simCart.open('/ravebot')
-	# use '/canbot' for real
-
-	#######################################
-
-	print 'hello, robot!'
-	simCart.movl(home)  # defaults to 20 s
-	simCart.wait()      # wait for movement
-	simCart.movj(P1)
-	simCart.wait()
-	simCart.movj(P_plato)
-	simCart.wait()
-
-	simCart.movl(P4)
-	simCart.wait()
-	simCart.movl(P5)
-	simCart.wait()
+   for i in range(0,3):
+      robot_base.append(res.get(0).asList().get(i).asDouble())
 
 
-	rpc.write(cmd1, res)	# Coger plato.
+   rpc.write(whereisTCP, res)
 
+   TCPPosition = []
 
-	simCart.movl(P4)
-	simCart.wait()
-	simCart.movl(P_plato)
-	simCart.wait()
+   for i in range(0,3):
+      TCPPosition.append(res.get(0).asList().get(i).asDouble())
 
-	simCart.movj(P2)
-	simCart.wait()
-	simCart.movj(P3)
-	simCart.wait()
-	simCart.movj(P_cajon)
-	simCart.wait()
+   #######################################
 
-	simCart.movl(P6)
-	simCart.wait()
-	simCart.movl(P7)
-	simCart.wait()
+   home=[0,0,1.41,0,0]
 
+   P_cajon=[0.05,0.5,0.8,90,0]
 
-	rpc.write(cmd2, res)	# Dejar plato.
+   #######################################
 
+   simCart = CartesianClient()
+   simCart.open('/ravebot')
+   # use '/canbot' for real
 
-	simCart.movl(P6)
-	simCart.wait()
-	simCart.movl(P_cajon)
-	simCart.wait()
+   #######################################
 
-	simCart.movj(P1)
-	simCart.wait()
-	simCart.movj(home)
-	simCart.wait()
+   print ('\n' + 'Starting Simulation' + '\n')
 
-	#######################################
+   simCart.movl(home)  # defaults to 20 s
+   simCart.wait()      # wait for movement
 
-	print 'done!'
-	simCart.close()
+   targetpoint = calculateTargetpoint(dish_position, robot_base, 0.03, 0.3, 0.2)
+   movj(targetpoint, axes, mode, pos, simCart, basemanip)
+
+   movl(targetpoint, simCart, 0.02, 0.15, 0.08, dish_position, TCPPosition, rpc, grab, release, res, 1, 0)   # Grab dish
+
+   movj(P_cajon, axes, mode, pos, simCart, basemanip)
+   yarp.Time.delay(30)
+
+   movl(P_cajon, simCart, 0, 0.38, 0.12, dish_position, TCPPosition, rpc, grab, release, res, 2, 0)   # Release dish
+
+   movinitial(axes, mode, pos)
+
+   simCart.wait()
+
+   print ('\n' + 'Done' + '\n')
+
+   raw_input('Press Enter to end simulation' + '\n')
+
+   rpc.write(delObjs, res)
+
+   #######################################
+
+   simCart.close()
+
 
 if __name__ == '__main__':
-	simulation();
+   simulation()

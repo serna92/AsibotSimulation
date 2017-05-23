@@ -1,155 +1,98 @@
 # Miguel Serna Agudo
 # NIA: 100285275
 
+# Find (\n|^) as regular expression and replace \n   
+
 #!/usr/bin/python
 
-from AsibotPy import *
-from openravepy import *
+from common_functions import *
 
 def simulation():
 
-	env = Environment()
-	#env.SetViewer('qtcoin')
-	env.Load('AsibotSimulation/entornoAsibot/asibot_kitchen.env.xml')
+   dd, pos, vel, enc, mode, axes = initRavebot()
+   env, basemanip = initOpenRave()
 
-	redCan = env.ReadKinBodyXMLFile('AsibotSimulation/entornoAsibot/redCan.kinbody.xml')
-	env.Add(redCan)
+   rpc = yarp.RpcClient()
+   rpc.open('/command/ravebot/world')
+   yarp.Network.connect('/command/ravebot/world', '/ravebot/world')
 
-	raw_input('\n' + 'Press Enter to close')
+   grab, release, add, delObjs, whereisObj, whereisRobot, whereisTCP = defineCommands('redCan', 'asibot')
 
-	robot = env.GetRobots()[0]
-	RaveSetDebugLevel(DebugLevel.Debug)
-	basemanip = interfaces.BaseManipulation(robot, plannername = 'BiRRT')
-	goal = []
+   res = yarp.Bottle()
 
-	rpc = yarp.RpcClient()
+   rpc.write(add, res)
 
-	rpc.open('/command/ravebot/world')
+   #######################################
 
-	yarp.Network.connect('/command/ravebot/world', '/ravebot/world')
+   rpc.write(whereisObj, res)
 
-	#######################################
+   redCan_position = []
 
-	res = yarp.Bottle()
+   for i in range(0,3):
+      redCan_position.append(res.get(0).asList().get(i).asDouble())
 
-	cmd1 = yarp.Bottle()
+   rpc.write(whereisRobot, res)
 
-	cmd1.addString('world')
-	cmd1.addString('grab')
-	cmd1.addString('obj')
-	cmd1.addString('redCan')
-	cmd1.addInt(1)
+   robot_base = []
 
-	cmd2 = yarp.Bottle()
-
-	cmd2.addString('world')
-	cmd2.addString('grab')
-	cmd2.addString('obj')
-	cmd2.addString('redCan')
-	cmd2.addInt(0)  
-
-	#######################################
-
-	home=[0,0,1.4,0,0]
-
-	P1=[0.3,0.9,0.6,90,0]
-	P_lata=[-0.15,0.7,0.5,90,0]
-	P_labios=[-0.2,0,0.6,90,0]
-
-	P2=[-0.15,0.7,0.25,90,0]
-	P3=[-0.15,0.8,0.25,90,0]
-
-	#P4=
-	#P5=
-
-	#######################################
-
-	simCart = CartesianClient()
-	simCart.open('/ravebot')
-	# use '/canbot' for real
-
-	#######################################
-
-	print 'hello, robot!'
-	simCart.movl(home)  # defaults to 20 s
-	simCart.wait()      # wait for movement
+   for i in range(0,3):
+      robot_base.append(res.get(0).asList().get(i).asDouble())
 
 
-	simCart.inv(P1, goal)	# [71.56505117707799, 38.48040850914066, 53.40043240624258, -1.8808409153832386, 0.0] In degrees
+   rpc.write(whereisTCP, res)
 
-	for i in range (0, len(goal)):
-	   goal[i] = goal[i] / 360 * 2 * 3.141593
-	   # [1.2490457723951560176, 0.67160982599528096237, 0.93201336747529917037, -0.032826866679580145314, 0.0] In radians
-	print goal
+   TCPPosition = []
 
-	traj = basemanip.MoveManipulator(goal = goal,execute = False,maxiter=3000,steplength=0.15,maxtries=2,outputtrajobj=True)
-	#raveLogInfo('traj has %d waypoints, last waypoint is: %s'%(traj.GetNumWaypoints(),repr(traj.GetWaypoint(-1))))
-        
-	n = traj.GetNumWaypoints()
-	for i in range(0,n):
-	   print str(traj.GetWaypoint(i)[0:5]) + '\n'
-	   simCart.movj(traj.GetWaypoint(i)/2/3.141593*360)
-           simCart.wait()
+   for i in range(0,3):
+      TCPPosition.append(res.get(0).asList().get(i).asDouble())
 
-	raw_input('\n' + 'Press Enter to close')
+   #######################################
 
-	#robot.GetController().SetPath(traj)
-        #robot.WaitForController(0)
+   home=[0,0,1.41,0,0]
 
-        raw_input('\n' + 'Press Enter to close')
+   P_lips=[-0.2,0,0.62,90,0]
 
-	#simCart.movj(P1)
-	#simCart.wait()
-	simCart.movj(P_lata)
-	simCart.wait()
+   #######################################
 
-	simCart.movl(P2)
-	simCart.wait()
-	simCart.movl(P3)
-	simCart.wait()
+   simCart = CartesianClient()
+   simCart.open('/ravebot')
+   # use '/canbot' for real
 
-	rpc.write(cmd1, res)	# Agarrar lata.
+   #######################################
 
-	simCart.movl(P2)
-	simCart.wait()
-	simCart.movj(P_lata)
-	simCart.wait()
+   print ('\n' + 'Starting Simulation' + '\n')
 
-	simCart.movj(P_labios)
-	simCart.wait()
+   simCart.movl(home)  # defaults to 20 s
+   simCart.wait()      # wait for movement
 
-		# Mov. cartesiano para dar de beber.
-		# Problemas con el limite de movimiento
-		# maximo de los ejes.
+   targetpoint = calculateTargetpoint(redCan_position, robot_base, 0.03, 0.2, 0.2)
+   movj(targetpoint, axes, mode, pos, simCart, basemanip)
 
-	simCart.movj(P_lata)
-	simCart.wait()
+   movl(targetpoint, simCart, 0.02, 0.15, 0.05, redCan_position, TCPPosition, rpc, grab, release, res, 1, 0)	# Grab red can
 
-	simCart.movl(P2)
-	simCart.wait()
-	simCart.movl(P3)
-	simCart.wait()
+   movj(P_lips, axes, mode, pos, simCart, basemanip)
+   yarp.Time.delay(20)
 
-	rpc.write(cmd2, res)	# Soltar lata.
+   tiltObj(P_lips, simCart, 20)		# Give drink
 
-	simCart.movl(P2)
-	simCart.wait()
-	simCart.movj(P_lata)
-	simCart.wait()
+   movj(targetpoint, axes, mode, pos, simCart, basemanip)
 
-	simCart.movj(P1)
-	simCart.wait()
-	simCart.movj(home)
-	simCart.wait()
+   movl(targetpoint, simCart, 0.02, 0.15, 0.05, redCan_position, TCPPosition, rpc, grab, release, res, 2, 0)	# Release red can
 
-	#######################################
+   movinitial(axes, mode, pos)
 
-	print 'done!'
-	simCart.close()
+   simCart.wait()
 
-	env.Destroy()
+   print ('\n' + 'Done' + '\n')
 
-	raw_input('\n' + 'Press Enter to close')
+   raw_input('Press Enter to end simulation' + '\n')
+
+   rpc.write(delObjs, res)
+
+   #######################################
+
+   simCart.close()
+
 
 if __name__ == '__main__':
-	simulation()
+   simulation()
