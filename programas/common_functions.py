@@ -126,7 +126,13 @@ def movj(targetpoint, axes, mode, pos, simCart, basemanip):
       pos.positionMove(2,waypoint[2])
       pos.positionMove(3,waypoint[3])
       pos.positionMove(4,waypoint[4])
-
+      
+   while True:
+      if pos.checkMotionDone():
+         break
+      else:
+         yarp.Time.delay(0.5)
+   print 'Done'
 
 def movl(targetpoint, simCart, distance_offset_x, distance_offset_y, height_offset, objPosition, TCPPosition, rpc, grab, release, res, action, degrees):
 
