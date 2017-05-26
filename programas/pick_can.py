@@ -5,37 +5,26 @@
 
 from common_functions import *
 
-def simulation():
+def simulation(redCanCoords, robotCoords, wheelchairCoords):
 
    dd, pos, vel, enc, mode, axes = initRavebot()
-   env, basemanip = initOpenRave()
+   env, basemanip = initOpenRave(robotCoords, wheelchairCoords)
 
    rpc = yarp.RpcClient()
    rpc.open('/command/ravebot/world')
    yarp.Network.connect('/command/ravebot/world', '/ravebot/world')
 
-   grab, release, add, delObjs, whereisObj, whereisRobot, whereisTCP = defineCommands('redCan', 'asibot')
+   grab, release, add, delObjs, whereisTCP, mvRobot, mvWheelchair, mvObj1, mvObj2, add2 = defineCommands(1, redCanCoords, [], wheelchairCoords, robotCoords)
 
    res = yarp.Bottle()
 
    rpc.write(add, res)
 
+   rpc.write(mvWheelchair, res)
+   rpc.write(mvRobot, res)
+   rpc.write(mvObj1, res)
+
    #######################################
-
-   rpc.write(whereisObj, res)
-
-   redCan_position = []
-
-   for i in range(0,3):
-      redCan_position.append(res.get(0).asList().get(i).asDouble())
-
-   rpc.write(whereisRobot, res)
-
-   robot_base = []
-
-   for i in range(0,3):
-      robot_base.append(res.get(0).asList().get(i).asDouble())
-
 
    rpc.write(whereisTCP, res)
 
@@ -47,8 +36,6 @@ def simulation():
    #######################################
 
    home=[0,0,1.41,0,0]
-
-   P_lips=[-0.2,0,0.62,90,0]
 
    #######################################
 
@@ -63,25 +50,40 @@ def simulation():
    simCart.movl(home)  # defaults to 20 s
    simCart.wait()      # wait for movement
 
-   targetpoint = calculateTargetpoint(redCan_position, robot_base, 0.03, 0.2, 0.2)
-   movj(targetpoint, axes, mode, pos, simCart, basemanip)
+   targetpoints = []
 
-   movl(targetpoint, simCart, 0.02, 0.15, 0.05, redCan_position, TCPPosition, rpc, grab, release, res, 1, 0)	# Grab red can
+   targetpoint1 = calculateTargetpoint(redCanCoords, robotCoords, 0.03, 0.2, 0.2)
 
-   movj(P_lips, axes, mode, pos, simCart, basemanip)
-   yarp.Time.delay(20)
+   targetpoint2 = []
+   targetpoint2.append(wheelchairCoords[0] - 1.48)	# Targetpoint desired to be near user lips
+   targetpoint2.append(wheelchairCoords[1] - 0.45)	# respect to the position of the weelchair
+   targetpoint2.append(wheelchairCoords[2] - 0.08)
+   targetpoint2.append(90)
+   targetpoint2.append(0)
 
-   tiltObj(P_lips, simCart, 20)		# Give drink
+   targetpoints = [targetpoint1, targetpoint2]
 
-   movj(targetpoint, axes, mode, pos, simCart, basemanip)
+   if checkTargetPoints(targetpoints) == True:
 
-   movl(targetpoint, simCart, 0.02, 0.15, 0.05, redCan_position, TCPPosition, rpc, grab, release, res, 2, 0)	# Release red can
+      movj(targetpoint, axes, mode, pos, simCart, basemanip)
 
-   movinitial(axes, mode, pos)
+      print 'Grabbing red can'
+      movl(targetpoint, simCart, 0.02, 0.15, 0.05, redCanCoords, TCPPosition, rpc, grab, release, res, 1, 0)	# Grab red can
 
-   simCart.wait()
+      movj(targetpoint2, axes, mode, pos, simCart, basemanip)
 
-   raw_input('Press Enter to end simulation' + '\n')
+      print 'Giving drink'
+      tiltObj(targetpoint2, simCart, 20)	# Give drink
+
+      movj(targetpoint, axes, mode, pos, simCart, basemanip)
+
+      print 'Releasing red can'
+      movl(targetpoint, simCart, 0.02, 0.15, 0.05, redCanCoords, TCPPosition, rpc, grab, release, res, 2, 0)	# Release red can
+
+      movinitial(axes, mode, pos)
+      simCart.wait()
+
+   raw_input('\n' + 'Press Enter to end simulation' + '\n')
 
    rpc.write(delObjs, res)
 

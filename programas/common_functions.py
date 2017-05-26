@@ -24,22 +24,56 @@ def initRavebot():
    return dd, pos, vel, enc, mode, axes
 
 
-def initOpenRave():
+def mvKinbody(kinBodyName, coords, env):
+
+
+   objPtr = env.GetKinBody(kinBodyName);
+   T = objPtr.GetTransform()
+   T[0][3] = coords[0]
+   T[1][3] = coords[1]
+   T[2][3] = coords[2]
+   objPtr.SetTransform(T);
+
+
+def initOpenRave(robotCoords, wheelchairCoords):
 
 
    env = Environment()
    env.Load('AsibotSimulation/entornoAsibot/asibot_kitchen.env.xml')
-   env.add('asibot.robot.xml')
-   env.add('weelchair.kinbody.xml')
+   mvKinbody('asibot', robotCoords, env)
+   mvKinbody('wheelchair', wheelchairCoords, env)
    robot = env.GetRobots()[0]
    basemanip = interfaces.BaseManipulation(robot, plannername = 'BiRRT')
 
    return env, basemanip
 
 
-def defineCommands(objname, robotname):
+def defineCommands(task, ObjCoords, ObjCoords2, wheelchairCoords, robotCoords):
 
    grab = yarp.Bottle()
+   release = yarp.Bottle()
+   add = yarp.Bottle()
+   add2 = yarp.Bottle()
+   delObjs = yarp.Bottle()
+   whereisTCP = yarp.Bottle()
+   mvRobot = yarp.Bottle()
+   mvWheelchair = yarp.Bottle()
+   mvObj1 = yarp.Bottle()
+   mvObj2 = yarp.Bottle()
+
+   if task == 1:
+
+      objname = 'redCan'   
+   
+   elif task == 2:
+
+      objname = 'bottle'
+      objname2 = 'glass'
+
+   else:
+
+      objname = 'dish'
+
 
    grab.addString('world')
    grab.addString('grab')
@@ -47,74 +81,86 @@ def defineCommands(objname, robotname):
    grab.addString(objname)
    grab.addInt(1)
 
-   release = yarp.Bottle()
-
    release.addString('world')
    release.addString('grab')
    release.addString('obj')
    release.addString(objname)
    release.addInt(0)
 
-   add = yarp.Bottle()
-
    add.addString('world')
    add.addString('mk')
    add.addString('obj')
    add.addString('AsibotSimulation/entornoAsibot/' + objname + '.kinbody.xml')
 
-   delObjs = yarp.Bottle()
-
    delObjs.addString('world')
    delObjs.addString('del')
    delObjs.addString('all')
-
-   whereisObj = yarp.Bottle()
-
-   whereisObj.addString('world')
-   whereisObj.addString('whereis')
-   whereisObj.addString('obj')
-   whereisObj.addString(objname)
-
-   whereisRobot = yarp.Bottle()
-
-   whereisRobot.addString('world')
-   whereisRobot.addString('whereis')
-   whereisRobot.addString('obj')
-   whereisRobot.addString(robotname)
-
-   whereisTCP = yarp.Bottle()
 
    whereisTCP.addString('world')
    whereisTCP.addString('whereis')
    whereisTCP.addString('tcp')
 
-   return grab, release, add, delObjs, whereisObj, whereisRobot, whereisTCP
+   mvRobot.addString('world')
+   mvRobot.addString('mv')
+   mvRobot.addString('asibot')
+   mvRobot.addDouble(robotCoords[0])
+   mvRobot.addDouble(robotCoords[1])
+   mvRobot.addDouble(robotCoords[2])
+
+   mvWheelchair.addString('world')
+   mvWheelchair.addString('mv')
+   mvWheelchair.addString('wheelchair')
+   mvWheelchair.addDouble(wheelchairCoords[0])
+   mvWheelchair.addDouble(wheelchairCoords[1])
+   mvWheelchair.addDouble(wheelchairCoords[2])
+
+   mvObj1.addString('world')
+   mvObj1.addString('mv')
+   mvObj1.addString(objname)
+   mvObj1.addDouble(ObjCoords[0])
+   mvObj1.addDouble(ObjCoords[1])
+   mvObj1.addDouble(ObjCoords[2])
+
+   if task == 2:
+
+      mvObj2.addString('world')
+      mvObj2.addString('mv')
+      mvObj2.addString(objname2)
+      mvObj2.addDouble(ObjCoords2[0])
+      mvObj2.addDouble(ObjCoords2[1])
+      mvObj2.addDouble(ObjCoords2[2])
+
+      add2.addString('world')
+      add2.addString('mk')
+      add2.addString('obj')
+      add2.addString('AsibotSimulation/entornoAsibot/' + objname2 + '.kinbody.xml')
+
+   return grab, release, add, delObjs, whereisTCP, mvRobot, mvWheelchair, mvObj1, mvObj2, add2
 
 
 def movinitial(axes, mode, pos):
+
 
    for i in range(0,axes): mode.setPositionMode(i)
 
    for j in range(0, axes):
       pos.positionMove(j,0)
 
+   while True:
+      yarp.Time.delay(0.5)
+      if pos.checkMotionDone():
+         break
+
 
 def movj(targetpoint, axes, mode, pos, simCart, basemanip):
 
 
    goal = []
-   print targetpoint
    simCart.inv(targetpoint, goal)
 
    for i in range (0, len(goal)):
-      if math.isnan(goal[i]):
-         print 'ERROR: Targetpoint is out of range'
-         simCart.close()
-         return False
-
       goal[i] = goal[i] / 360 * 2 * 3.141593	# Change degrees --> radians
 
-   print goal
    # Get a valid trajectory
 
    traj = basemanip.MoveManipulator(goal = goal, execute = False, maxiter = 3000, steplength = 0.15, maxtries = 3, outputtrajobj = True)
@@ -137,11 +183,10 @@ def movj(targetpoint, axes, mode, pos, simCart, basemanip):
       pos.positionMove(0,waypoint[0])
       
    while True:
+      yarp.Time.delay(0.5)
       if pos.checkMotionDone():
          break
-      else:
-         yarp.Time.delay(0.5)
-   print 'Done'
+
 
 def movl(targetpoint, simCart, distance_offset_x, distance_offset_y, height_offset, objPosition, TCPPosition, rpc, grab, release, res, action, degrees):
 
@@ -257,6 +302,7 @@ def calculateTargetpoint(objPosition, robotPosition, distance_offset_x, distance
       targetpoint.append(robotPosition[1] - objPosition[1] - distance_offset_y)
 
    elif ((robotPosition[0] - objPosition[0]) <= 0.02 and (robotPosition[0] - objPosition[0]) >= -0.02):
+      targetpoint.append(robotPosition[0] - objPosition[0])
       targetpoint.append(robotPosition[1] - objPosition[1] - distance_offset_y)
 
    else:
@@ -270,6 +316,17 @@ def calculateTargetpoint(objPosition, robotPosition, distance_offset_x, distance
    targetpoint += [90,0]
 
    return targetpoint
+
+
+def checkTargetPoints(targetpoints):
+
+   for i in range (0, len(targetpoints)):
+      for j in range (0, len(targetpoints[i])):
+         if math.isnan(targetpoints[i][j]):
+            print ('\n' + 'ERROR: Targetpoint' + str(i) + 'is out of range' + '\n')
+            return False
+
+   return True
 
 
 if __name__ == '__main__':

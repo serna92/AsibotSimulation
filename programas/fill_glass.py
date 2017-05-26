@@ -5,46 +5,28 @@
 
 from common_functions import *
 
-def simulation():
+def simulation(glassCoords, bottleCoords, robotCoords, wheelchairCoords):
 
    dd, pos, vel, enc, mode, axes = initRavebot()
-   env, basemanip = initOpenRave()
+   env, basemanip = initOpenRave(robotCoords, wheelchairCoords)
 
    rpc = yarp.RpcClient()
    rpc.open('/command/ravebot/world')
    yarp.Network.connect('/command/ravebot/world', '/ravebot/world')
 
-   grabObj1, releaseObj1, addObj1, delObjs, whereisObj1, whereisRobot, whereisTCP = defineCommands('glass', 'asibot')
-   grabObj2, releaseObj2, addObj2, delObjs, whereisObj2, whereisRobot, whereisTCP = defineCommands('bottle', 'asibot')
+   grab, release, add, delObjs, whereisTCP, mvRobot, mvWheelchair, mvObj1, mvObj2, add2 = defineCommands(2, bottleCoords, glassCoords, wheelchairCoords, robotCoords)
 
    res = yarp.Bottle()
 
-   rpc.write(addObj1, res)
-   rpc.write(addObj2, res)
+   rpc.write(add, res)
+   rpc.write(add2, res)
+
+   rpc.write(mvWheelchair, res)
+   rpc.write(mvRobot, res)
+   rpc.write(mvObj1, res)
+   rpc.write(mvObj2, res)
 
    #######################################
-
-   rpc.write(whereisObj1, res)
-
-   glass_position = []
-
-   for i in range(0,3):
-      glass_position.append(res.get(0).asList().get(i).asDouble())
-
-   rpc.write(whereisObj2, res)
-
-   bottle_position = []
-
-   for i in range(0,3):
-      bottle_position.append(res.get(0).asList().get(i).asDouble())
-
-   rpc.write(whereisRobot, res)
-
-   robot_base = []
-
-   for i in range(0,3):
-      robot_base.append(res.get(0).asList().get(i).asDouble())
-
 
    rpc.write(whereisTCP, res)
 
@@ -56,17 +38,6 @@ def simulation():
    #######################################
 
    home=[0,0,1.4,0,0]
-
-   P1=[0.3,0.9,0.6,90,0]
-   P_botella=[0.6,0.4,0.5,90,0]
-   P_vaso=[0.3,0.9,0.4,90,0]
-
-   P2=[0.6,0.4,0.3,90,0]
-   P3=[0.7,0.5,0.3,90,0]
-
-   P4=[0.3,0.8,0.4,90,0]
-   P5=[0.3,0.8,0.37,90,0]
-   P6=[0.3,0.8,0.4,90,-75]
 
    #######################################
 
@@ -81,31 +52,39 @@ def simulation():
    simCart.movl(home)  # defaults to 20 s
    simCart.wait()      # wait for movement
 
-   print bottle_position
+   targetpoints = []
 
-   targetpoint = calculateTargetpoint(bottle_position, robot_base, 0.03, 0.2, 0.2)
-   movj(targetpoint, axes, mode, pos, simCart, basemanip)
+   targetpoint1 = calculateTargetpoint(bottleCoords, robotCoords, 0.03, 0.2, 0.2)
 
-   movl(targetpoint, simCart, 0.02, 0.15, 0.05, bottle_position, TCPPosition, rpc, grabObj2, releaseObj2, res, 1, 0)	# Grab bottle
+   targetpoint2 = []
+   targetpoint2.append(glassCoords[0] - 0.18)		# Targetpoint desired to be at the right of the glass
+   targetpoint2.append(glassCoords[1] - 0.1)
+   targetpoint2.append(glassCoords[2] + 0.03)
+   targetpoint2 = calculateTargetpoint(targetpoint2, robotCoords, 0.03, 0.2, 0.2)
 
-   glass_position[0] -= 0.18	# Targetpoint desired to be at the right of the glass
-   glass_position[1] -= 0.1
-   glass_position[2] += 0.03
+   targetpoints = [targetpoint1, targetpoint2]
 
-   targetpoint2 = calculateTargetpoint(glass_position, robot_base, 0.03, 0.2, 0.2)
-   movj(targetpoint2, axes, mode, pos, simCart, basemanip)
+   if checkTargetPoints(targetpoints) == True:
 
-   tiltObj(targetpoint2, simCart, 75)	# Fill glass
+      movj(targetpoint, axes, mode, pos, simCart, basemanip)
 
-   movj(targetpoint, axes, mode, pos, simCart, basemanip)
+      print 'Grabbing bottle'
+      movl(targetpoint, simCart, 0.02, 0.15, 0.05, bottleCoords, TCPPosition, rpc, grab, release, res, 1, 0)	# Grab bottle
 
-   movl(targetpoint, simCart, 0.02, 0.15, 0.05, bottle_position, TCPPosition, rpc, grabObj2, releaseObj2, res, 2, 0)	# Release bottle
+      movj(targetpoint2, axes, mode, pos, simCart, basemanip)
+      
+      print 'Filling glass'
+      tiltObj(targetpoint2, simCart, 75)	# Fill glass
 
-   movinitial(axes, mode, pos)
+      movj(targetpoint, axes, mode, pos, simCart, basemanip)
 
-   simCart.wait()
+      print 'Releasing bottle'
+      movl(targetpoint, simCart, 0.02, 0.15, 0.05, bottleCoords, TCPPosition, rpc, grab, release, res, 2, 0)	# Release bottle
 
-   raw_input('Press Enter to end simulation' + '\n')
+      movinitial(axes, mode, pos)
+      simCart.wait()
+
+   raw_input('\n' + 'Press Enter to end simulation' + '\n')
 
    rpc.write(delObjs, res)
 

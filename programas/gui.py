@@ -9,10 +9,11 @@
 from Tkinter import *
 from PIL import Image, ImageTk
 import Pmw
-from xml.etree import ElementTree as et
-from common_functions import *
+import time
+
 
 # Import modules.
+
 
 import imp
 
@@ -20,7 +21,9 @@ task1 = imp.load_source('task1', 'AsibotSimulation/programas/pick_can.py')
 task2 = imp.load_source('task2', 'AsibotSimulation/programas/fill_glass.py')
 task3 = imp.load_source('task3', 'AsibotSimulation/programas/move_dish.py')
 
+
 # Global variables.
+
 
 selectedOption = 0
 redCircle = None
@@ -222,56 +225,26 @@ def start():
     global task1, task2, task3
 
     if selectedOption == 1 and x1 != -1:
-	
-        tree = et.parse("AsibotSimulation/entornoAsibot/redCan.kinbody.xml")
-        tree.findall(".//translation")[0].text = str(x1) + " " + str(y1) + " 0.865"
-        tree.write("AsibotSimulation/entornoAsibot/redCan.kinbody.xml")
 
-        tree2 = et.parse("AsibotSimulation/entornoAsibot/asibot.robot.xml")
-	tree3 = et.parse("AsibotSimulation/entornoAsibot/wheelchair.kinbody.xml")
-        tree2.findall("./translation")[0].text = "1.3 1.315 0.7491"
-        tree3.findall("./translation")[0].text = "1.6 1.35 0.7"
-        tree2.write("AsibotSimulation/entornoAsibot/asibot.robot.xml")
-        tree3.write("AsibotSimulation/entornoAsibot/wheelchair.kinbody.xml")
-
-	print "WARNING: requires a running instance of cartesianServer"
-	task1.simulation()
+	print "\n" + "WARNING: requires a running instance of cartesianServer" + "\n"
+	task1.simulation([x1, y1, 0.865], [1, 1.215, 0.7], [1.3, 1.25, 0.7])
 
     if selectedOption == 2 and x1 != -1 and x2 != -1:
-        
-        tree = et.parse("AsibotSimulation/entornoAsibot/glass.kinbody.xml")
-        tree2 = et.parse("AsibotSimulation/entornoAsibot/bottle.kinbody.xml")
-        tree.findall(".//translation")[0].text = str(x1) + " " + str(y1) + " 0.865"
-        tree2.findall(".//translation")[0].text = str(x2) + " " + str(y2) + " 0.865"
-        tree.write("AsibotSimulation/entornoAsibot/glass.kinbody.xml")
-        tree2.write("AsibotSimulation/entornoAsibot/bottle.kinbody.xml")
 
-        tree3 = et.parse("AsibotSimulation/entornoAsibot/asibot.robot.xml")
-	tree4 = et.parse("AsibotSimulation/entornoAsibot/wheelchair.kinbody.xml")
-        tree3.findall("./translation")[0].text = "1.3 1.215 0.7491"
-        tree4.findall("./translation")[0].text = "1.6 1.25 0.7"
-        tree3.write("AsibotSimulation/entornoAsibot/asibot.robot.xml")
-        tree4.write("AsibotSimulation/entornoAsibot/wheelchair.kinbody.xml")
+	if x1 - x2 >  0.05 or x1 - x2 < -0.05 or y1 - y2 > 0.05 or y1 - y2 < -0.05:
 
-	print "WARNING: requires a running instance of cartesianServer"
-	task2.simulation()
+	   print "\n" + "WARNING: requires a running instance of cartesianServer" + "\n"
+	   task2.simulation([x1, y1, 0.865], [x2, y2, 0.865], [1, 1.215, 0.7491], [1.3, 1.25, 0.7])
+        else:
+
+	   print "\n" + "Error: Both objects are too much near each other" + "\n"            
 
     if selectedOption == 3 and x1 != -1:
 
-	tree = et.parse("AsibotSimulation/entornoAsibot/dish.kinbody.xml")
-        tree.findall(".//translation")[0].text = str(x1) + " " + str(y1) + " 0.865"
-        tree.write("AsibotSimulation/entornoAsibot/dish.kinbody.xml")
-
-        tree2 = et.parse("AsibotSimulation/entornoAsibot/asibot.robot.xml")
-	tree3 = et.parse("AsibotSimulation/entornoAsibot/wheelchair.kinbody.xml")
-        tree2.findall("./translation")[0].text = "1 1.215 0.7491"
-        tree3.findall("./translation")[0].text = "1.3 1.25 0.7"
-        tree2.write("AsibotSimulation/entornoAsibot/asibot.robot.xml")
-        tree3.write("AsibotSimulation/entornoAsibot/wheelchair.kinbody.xml")
-
-	print "WARNING: requires a running instance of cartesianServer"
-	task3.simulation()
+	print "\n" + "WARNING: requires a running instance of cartesianServer" + "\n"
+	task3.simulation([x1, y1, 0.865], [1, 1.215, 0.7491], [1.3, 1.25, 0.7])
     
+
 # Loading images.
 
 
@@ -329,6 +302,7 @@ placedObjs2.pack(side = BOTTOM)
 placedObjs = Label(labelframe2)
 placedObjs.pack(side = BOTTOM)
 
+
 # Adding button Start Simulation.
 
 
@@ -337,5 +311,11 @@ bottomframe.pack(expand=1, padx=10, pady=10)
 
 blackbutton = Button(bottomframe, text="Start Simulation", fg="black", command = start)
 blackbutton.pack( side = BOTTOM )
+
+
+try:
+   time.sleep(0.1)
+except KeyboardInterrupt:
+   root.destroy()
 
 root.mainloop()
