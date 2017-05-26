@@ -1,105 +1,96 @@
 # Miguel Serna Agudo
-# NIA: 100285275
+# NIA: 100285275  
 
-from AsibotPy import *
+#!/usr/bin/python
 
-rpc = yarp.RpcClient()
+from common_functions import *
 
-rpc.open('/command/ravebot/world')
+def simulation(redCanCoords, robotCoords, wheelchairCoords):
 
-yarp.Network.connect('/command/ravebot/world', '/ravebot/world')
+   dd, pos, vel, enc, mode, axes = initRavebot()
+   env, basemanip = initOpenRave(robotCoords, wheelchairCoords)
 
-#######################################
+   rpc = yarp.RpcClient()
+   rpc.open('/command/ravebot/world')
+   yarp.Network.connect('/command/ravebot/world', '/ravebot/world')
 
-res = yarp.Bottle()
+   grab, release, add, delObjs, whereisTCP, mvRobot, mvWheelchair, mvObj1, mvObj2, add2 = defineCommands(1, redCanCoords, [], wheelchairCoords, robotCoords)
 
-cmd1 = yarp.Bottle()
+   res = yarp.Bottle()
 
-cmd1.addString('world')
-cmd1.addString('grab')
-cmd1.addString('obj')
-cmd1.addString('redCan')
-cmd1.addInt(1)
+   rpc.write(add, res)
 
-cmd2 = yarp.Bottle()
+   rpc.write(mvWheelchair, res)
+   rpc.write(mvRobot, res)
+   rpc.write(mvObj1, res)
 
-cmd2.addString('world')
-cmd2.addString('grab')
-cmd2.addString('obj')
-cmd2.addString('redCan')
-cmd2.addInt(0)  
+   #######################################
 
-#######################################
+   rpc.write(whereisTCP, res)
 
-home=[0,0,1.4,0,0]
+   TCPPosition = []
 
-P1=[0.3,0.9,0.6,90,0]
-P_lata=[-0.15,0.7,0.5,90,0]
-P_labios=[-0.2,0,0.6,90,0]
+   for i in range(0,3):
+      TCPPosition.append(res.get(0).asList().get(i).asDouble())
 
-P2=[-0.15,0.7,0.25,90,0]
-P3=[-0.15,0.8,0.25,90,0]
+   #######################################
 
-#P4=
-#P5=
+   home=[0,0,1.41,0,0]
 
-#######################################
+   #######################################
 
-simCart = CartesianClient()
-simCart.open('/ravebot')
-# use '/canbot' for real
+   simCart = CartesianClient()
+   simCart.open('/ravebot')
+   # use '/canbot' for real
 
-#######################################
+   #######################################
 
-print 'hello, robot!'
-simCart.movl(home)  # defaults to 20 s
-simCart.wait()      # wait for movement
+   print ('\n' + 'Starting Simulation' + '\n')
 
-simCart.movj(P1)
-simCart.wait()
-simCart.movj(P_lata)
-simCart.wait()
+   simCart.movl(home)  # defaults to 20 s
+   simCart.wait()      # wait for movement
 
-simCart.movl(P2)
-simCart.wait()
-simCart.movl(P3)
-simCart.wait()
+   targetpoints = []
 
-rpc.write(cmd1, res)	# Agarrar lata.
+   targetpoint1 = calculateTargetpoint(redCanCoords, robotCoords, 0.03, 0.2, 0.2)
 
-simCart.movl(P2)
-simCart.wait()
-simCart.movj(P_lata)
-simCart.wait()
+   targetpoint2 = []
+   targetpoint2.append(wheelchairCoords[0] - 1.48)	# Targetpoint desired to be near user lips
+   targetpoint2.append(wheelchairCoords[1] - 0.45)	# respect to the position of the weelchair
+   targetpoint2.append(wheelchairCoords[2] - 0.08)
+   targetpoint2.append(90)
+   targetpoint2.append(0)
 
-simCart.movj(P_labios)
-simCart.wait()
+   targetpoints = [targetpoint1, targetpoint2]
 
-	# Mov. cartesiano para dar de beber.
-	# Problemas con el limite de movimiento
-	# maximo de los ejes.
+   if checkTargetPoints(targetpoints) == True:
 
-simCart.movj(P_lata)
-simCart.wait()
+      movj(targetpoint, axes, mode, pos, simCart, basemanip)
 
-simCart.movl(P2)
-simCart.wait()
-simCart.movl(P3)
-simCart.wait()
+      print 'Grabbing red can'
+      movl(targetpoint, simCart, 0.02, 0.15, 0.05, redCanCoords, TCPPosition, rpc, grab, release, res, 1, 0)	# Grab red can
 
-rpc.write(cmd2, res)	# Soltar lata.
+      movj(targetpoint2, axes, mode, pos, simCart, basemanip)
 
-simCart.movl(P2)
-simCart.wait()
-simCart.movj(P_lata)
-simCart.wait()
+      print 'Giving drink'
+      tiltObj(targetpoint2, simCart, 20)	# Give drink
 
-simCart.movj(P1)
-simCart.wait()
-simCart.movj(home)
-simCart.wait()
+      movj(targetpoint, axes, mode, pos, simCart, basemanip)
 
-#######################################
+      print 'Releasing red can'
+      movl(targetpoint, simCart, 0.02, 0.15, 0.05, redCanCoords, TCPPosition, rpc, grab, release, res, 2, 0)	# Release red can
 
-print 'done!'
-simCart.close()
+      movinitial(axes, mode, pos)
+      simCart.wait()
+
+   raw_input('\n' + 'Press Enter to end simulation' + '\n')
+
+   rpc.write(delObjs, res)
+
+   #######################################
+
+   simCart.close()
+
+
+if __name__ == '__main__':
+   simulation()
