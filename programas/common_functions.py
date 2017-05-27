@@ -27,21 +27,91 @@ def initRavebot():
 def mvKinbody(kinBodyName, coords, env):
 
 
-   objPtr = env.GetKinBody(kinBodyName);
+   objPtr = env.GetKinBody(kinBodyName)
    T = objPtr.GetTransform()
    T[0][3] = coords[0]
    T[1][3] = coords[1]
    T[2][3] = coords[2]
-   objPtr.SetTransform(T);
+   objPtr.SetTransform(T)
 
 
-def initOpenRave(robotCoords, wheelchairCoords):
+def addKinbody(kinBodyFile, env):
+
+   objKinBody = env.ReadKinBodyXMLFile(kinBodyFile)
+   env.Add(objKinBody, True)
+
+
+def grabKinbody(objKinBody, env):
+
+
+   robot = env.GetRobots()[0]
+   with env:
+      robot.Grab(env.GetKinBody(objKinBody))
+
+
+def releaseKinbody(objKinBody, env):
+
+
+   robot = env.GetRobots()[0]
+   with env:
+      robot.Release(env.GetKinBody(objKinBody))
+
+
+def refreshOpenrave(task, action, rpc, res, whereisObj, env):
+
+
+   if task == 1:
+
+      objname = 'redCan'   
+   
+   elif task == 2:
+
+      objname = 'bottle'
+
+   else:
+
+      objname = 'dish'
+
+   rpc.write(whereisObj,res)
+
+   objPosition = []
+
+   for i in range(0,3):
+      objPosition.append(res.get(0).asList().get(i).asDouble())
+
+   mvKinbody(objname, objPosition, env)
+
+   if action == 1:
+
+      grabKinbody(objname, env)
+   else:
+      releaseKinbody(objname, env)
+
+
+def initOpenRave(task, objCoords, objCoords2, wheelchairCoords, robotCoords):
 
 
    env = Environment()
    env.Load('AsibotSimulation/entornoAsibot/asibot_kitchen.env.xml')
+   env.SetViewer('qtcoin')
    mvKinbody('asibot', robotCoords, env)
    mvKinbody('wheelchair', wheelchairCoords, env)
+
+   if task == 1:
+
+      addKinbody('AsibotSimulation/entornoAsibot/redCan.kinbody.xml', env)
+      mvKinbody('redCan', objCoords, env)
+   elif task == 2:
+ 
+      addKinbody('AsibotSimulation/entornoAsibot/bottle.kinbody.xml', env)
+      addKinbody('AsibotSimulation/entornoAsibot/glass.kinbody.xml', env)
+      mvKinbody('bottle', objCoords, env)
+      mvKinbody('glass', objCoords2, env)
+   else:
+
+      addKinbody('AsibotSimulation/entornoAsibot/dish.kinbody.xml', env)
+      mvKinbody('dish', objCoords, env)
+
    robot = env.GetRobots()[0]
    basemanip = interfaces.BaseManipulation(robot, plannername = 'BiRRT')
 
@@ -56,6 +126,7 @@ def defineCommands(task, ObjCoords, ObjCoords2, wheelchairCoords, robotCoords):
    add2 = yarp.Bottle()
    delObjs = yarp.Bottle()
    whereisTCP = yarp.Bottle()
+   whereisObj = yarp.Bottle()
    mvRobot = yarp.Bottle()
    mvWheelchair = yarp.Bottle()
    mvObj1 = yarp.Bottle()
@@ -100,6 +171,11 @@ def defineCommands(task, ObjCoords, ObjCoords2, wheelchairCoords, robotCoords):
    whereisTCP.addString('whereis')
    whereisTCP.addString('tcp')
 
+   whereisObj.addString('world')
+   whereisObj.addString('whereis')
+   whereisObj.addString('obj')
+   whereisObj.addString(objname)
+
    mvRobot.addString('world')
    mvRobot.addString('mv')
    mvRobot.addString('asibot')
@@ -135,7 +211,7 @@ def defineCommands(task, ObjCoords, ObjCoords2, wheelchairCoords, robotCoords):
       add2.addString('obj')
       add2.addString('AsibotSimulation/entornoAsibot/' + objname2 + '.kinbody.xml')
 
-   return grab, release, add, delObjs, whereisTCP, mvRobot, mvWheelchair, mvObj1, mvObj2, add2
+   return grab, release, add, delObjs, whereisTCP, whereisObj, mvRobot, mvWheelchair, mvObj1, mvObj2, add2
 
 
 def movinitial(axes, mode, pos):
@@ -152,7 +228,7 @@ def movinitial(axes, mode, pos):
          break
 
 
-def movj(targetpoint, axes, mode, pos, simCart, basemanip):
+def movj(targetpoint, axes, mode, pos, simCart, basemanip, env):
 
 
    goal = []
@@ -164,10 +240,13 @@ def movj(targetpoint, axes, mode, pos, simCart, basemanip):
    # Get a valid trajectory
 
    traj = basemanip.MoveManipulator(goal = goal, execute = False, maxiter = 3000, steplength = 0.15, maxtries = 3, outputtrajobj = True)
+   robot = env.GetRobots()[0]
+   # basemanip.VerifyTrajectory(traj, samplingstep = 0.002)
+   robot.GetController().SetPath(traj)
 
    n = traj.GetNumWaypoints()
 
-   raveLogInfo('traj has %d waypoints'%(traj.GetNumWaypoints()))
+   print ('INFO: Trajectory has %d waypoints'%(traj.GetNumWaypoints()))
 
    for i in range(0,axes): mode.setPositionMode(i)
 
@@ -188,7 +267,7 @@ def movj(targetpoint, axes, mode, pos, simCart, basemanip):
          break
 
 
-def movl(targetpoint, simCart, distance_offset_x, distance_offset_y, height_offset, objPosition, TCPPosition, rpc, grab, release, res, action, degrees):
+def movl(targetpoint, simCart, distance_offset_x, distance_offset_y, height_offset, objPosition, TCPPosition, rpc, grab, release, res, action, objKinbody, degrees):
 
 
    if ((TCPPosition[0] - objPosition[0]) < -0.02):
@@ -204,11 +283,9 @@ def movl(targetpoint, simCart, distance_offset_x, distance_offset_y, height_offs
       simCart.movl(targetpoint)
       simCart.wait()
 
-      if (action == 1):  rpc.write(grab, res)	# Grab object
-      elif (action == 2):   rpc.write(release, res)		# Release object
+      if (action == 1): rpc.write(grab, res)	# Grab object
+      elif (action == 2): rpc.write(release, res)	# Release object
       elif (action == 3):   tiltObj(targetpoint, simCart, degrees)	# Tilt object
-      else:
-         pass
 
       targetpoint[2] += height_offset
 

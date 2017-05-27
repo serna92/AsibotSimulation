@@ -8,13 +8,13 @@ from common_functions import *
 def simulation(redCanCoords, robotCoords, wheelchairCoords):
 
    dd, pos, vel, enc, mode, axes = initRavebot()
-   env, basemanip = initOpenRave(robotCoords, wheelchairCoords)
+   env, basemanip = initOpenRave(1, redCanCoords, [], wheelchairCoords, robotCoords)
 
    rpc = yarp.RpcClient()
    rpc.open('/command/ravebot/world')
    yarp.Network.connect('/command/ravebot/world', '/ravebot/world')
 
-   grab, release, add, delObjs, whereisTCP, mvRobot, mvWheelchair, mvObj1, mvObj2, add2 = defineCommands(1, redCanCoords, [], wheelchairCoords, robotCoords)
+   grab, release, add, delObjs, whereisTCP, whereisObj, mvRobot, mvWheelchair, mvObj1, mvObj2, add2 = defineCommands(1, redCanCoords, [], wheelchairCoords, robotCoords)
 
    res = yarp.Bottle()
 
@@ -65,20 +65,22 @@ def simulation(redCanCoords, robotCoords, wheelchairCoords):
 
    if checkTargetPoints(targetpoints) == True:
 
-      movj(targetpoint, axes, mode, pos, simCart, basemanip)
+      movj(targetpoint1, axes, mode, pos, simCart, basemanip, env)
 
       print 'Grabbing red can'
-      movl(targetpoint, simCart, 0.02, 0.15, 0.05, redCanCoords, TCPPosition, rpc, grab, release, res, 1, 0)	# Grab red can
+      movl(targetpoint1, simCart, 0.02, 0.15, 0.05, redCanCoords, TCPPosition, rpc, grab, release, res, 1, 'redCan', 0)	  # Grab red can
+      refreshOpenrave(1, 1, rpc, res, whereisObj, env)
 
-      movj(targetpoint2, axes, mode, pos, simCart, basemanip)
+      movj(targetpoint2, axes, mode, pos, simCart, basemanip, env)
 
       print 'Giving drink'
       tiltObj(targetpoint2, simCart, 20)	# Give drink
 
-      movj(targetpoint, axes, mode, pos, simCart, basemanip)
+      movj(targetpoint1, axes, mode, pos, simCart, basemanip, env)
 
       print 'Releasing red can'
-      movl(targetpoint, simCart, 0.02, 0.15, 0.05, redCanCoords, TCPPosition, rpc, grab, release, res, 2, 0)	# Release red can
+      movl(targetpoint1, simCart, 0.02, 0.15, 0.05, redCanCoords, TCPPosition, rpc, grab, release, res, 2, 'redCan', 0)   # Release red can
+      refreshOpenrave(1, 2, rpc, res, whereisObj, env)
 
       movinitial(axes, mode, pos)
       simCart.wait()

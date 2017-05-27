@@ -231,7 +231,7 @@ def start():
 
     if selectedOption == 2 and x1 != -1 and x2 != -1:
 
-	if x1 - x2 >  0.05 or x1 - x2 < -0.05 or y1 - y2 > 0.05 or y1 - y2 < -0.05:
+	if x1 - x2 >  0.08 or x1 - x2 < -0.08 or y1 - y2 > 0.08 or y1 - y2 < -0.08:
 
 	   print "\n" + "WARNING: requires a running instance of cartesianServer" + "\n"
 	   task2.simulation([x1, y1, 0.865], [x2, y2, 0.865], [1, 1.215, 0.7491], [1.3, 1.25, 0.7])

@@ -1,6 +1,6 @@
 <KinBody name="glass">
   <Body type="dynamic">
-  <translation>1.183 0.179 0.865</translation>
+  <translation>0.82 0.179 0.865</translation>
     <Geom type="cylinder">
       <RotationAxis>1 0 0 -90</RotationAxis>
       <translation>0 0 0</translation>

@@ -8,13 +8,13 @@ from common_functions import *
 def simulation(glassCoords, bottleCoords, robotCoords, wheelchairCoords):
 
    dd, pos, vel, enc, mode, axes = initRavebot()
-   env, basemanip = initOpenRave(robotCoords, wheelchairCoords)
+   env, basemanip = initOpenRave(2, bottleCoords, glassCoords, wheelchairCoords, robotCoords)
 
    rpc = yarp.RpcClient()
    rpc.open('/command/ravebot/world')
    yarp.Network.connect('/command/ravebot/world', '/ravebot/world')
 
-   grab, release, add, delObjs, whereisTCP, mvRobot, mvWheelchair, mvObj1, mvObj2, add2 = defineCommands(2, bottleCoords, glassCoords, wheelchairCoords, robotCoords)
+   grab, release, add, delObjs, whereisTCP, whereisObj, mvRobot, mvWheelchair, mvObj1, mvObj2, add2 = defineCommands(2, bottleCoords, glassCoords, wheelchairCoords, robotCoords)
 
    res = yarp.Bottle()
 
@@ -66,20 +66,22 @@ def simulation(glassCoords, bottleCoords, robotCoords, wheelchairCoords):
 
    if checkTargetPoints(targetpoints) == True:
 
-      movj(targetpoint, axes, mode, pos, simCart, basemanip)
+      movj(targetpoint1, axes, mode, pos, simCart, basemanip, env)
 
       print 'Grabbing bottle'
-      movl(targetpoint, simCart, 0.02, 0.15, 0.05, bottleCoords, TCPPosition, rpc, grab, release, res, 1, 0)	# Grab bottle
+      movl(targetpoint1, simCart, 0.02, 0.15, 0.05, bottleCoords, TCPPosition, rpc, grab, release, res, 1, 'bottle', 0)	  # Grab bottle
+      refreshOpenrave(1, 1, rpc, res, whereisObj, env)
 
-      movj(targetpoint2, axes, mode, pos, simCart, basemanip)
+      movj(targetpoint2, axes, mode, pos, simCart, basemanip, env)
       
       print 'Filling glass'
       tiltObj(targetpoint2, simCart, 75)	# Fill glass
 
-      movj(targetpoint, axes, mode, pos, simCart, basemanip)
+      movj(targetpoint1, axes, mode, pos, simCart, basemanip, env)
 
       print 'Releasing bottle'
-      movl(targetpoint, simCart, 0.02, 0.15, 0.05, bottleCoords, TCPPosition, rpc, grab, release, res, 2, 0)	# Release bottle
+      movl(targetpoint1, simCart, 0.02, 0.15, 0.05, bottleCoords, TCPPosition, rpc, grab, release, res, 2, 'bottle', 0)	  # Release bottle
+      refreshOpenrave(1, 2, rpc, res, whereisObj, env)
 
       movinitial(axes, mode, pos)
       simCart.wait()

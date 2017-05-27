@@ -8,13 +8,13 @@ from common_functions import *
 def simulation(dishCoords, robotCoords, wheelchairCoords):
 
    dd, pos, vel, enc, mode, axes = initRavebot()
-   env, basemanip = initOpenRave(robotCoords, wheelchairCoords)
+   env, basemanip = initOpenRave(3, dishCoords, [], wheelchairCoords, robotCoords)
 
    rpc = yarp.RpcClient()
    rpc.open('/command/ravebot/world')
    yarp.Network.connect('/command/ravebot/world', '/ravebot/world')
 
-   grab, release, add, delObjs, whereisTCP, mvRobot, mvWheelchair, mvObj1, mvObj2, add2 = defineCommands(3, dishCoords, [], wheelchairCoords, robotCoords)
+   grab, release, add, delObjs, whereisTCP, whereisObj, mvRobot, mvWheelchair, mvObj1, mvObj2, add2 = defineCommands(3, dishCoords, [], wheelchairCoords, robotCoords)
 
    res = yarp.Bottle()
 
@@ -61,15 +61,17 @@ def simulation(dishCoords, robotCoords, wheelchairCoords):
 
    if checkTargetPoints(targetpoints) == True:
 
-      movj(targetpoint, axes, mode, pos, simCart, basemanip)
+      movj(targetpoint1, axes, mode, pos, simCart, basemanip, env)
 
       print 'Grabbing dish'
-      movl(targetpoint, simCart, 0.01, 0.15, 0.08, dishCoords, TCPPosition, rpc, grab, release, res, 1, 0)   # Grab dish
+      movl(targetpoint1, simCart, 0.01, 0.15, 0.08, dishCoords, TCPPosition, rpc, grab, release, res, 1, 'dish', 0)    # Grab dish
+      refreshOpenrave(1, 1, rpc, res, whereisObj, env) 
 
-      movj(targetpoint2, axes, mode, pos, simCart, basemanip)
+      movj(targetpoint2, axes, mode, pos, simCart, basemanip, env)
 
       print 'Releasing dish'
-      movl(targetpoint2, simCart, 0, 0.38, 0.12, dishCoords, TCPPosition, rpc, grab, release, res, 2, 0)   # Release dish
+      movl(targetpoint2, simCart, 0, 0.38, 0.12, dishCoords, TCPPosition, rpc, grab, release, res, 2, 'dish', 0)    # Release dish
+      refreshOpenrave(1, 2, rpc, res, whereisObj, env)
 
       movinitial(axes, mode, pos)
 

@@ -1,6 +1,6 @@
 <KinBody name="dish">
     <Body type="dynamic">
-    <translation>1.151 0.269 0.865</translation>
+    <translation>1 0.4 0.865</translation>
     <Geom type="cylinder">
         <RotationAxis>1 0 0 90</RotationAxis>
         <translation>0 0 -0.028</translation>
