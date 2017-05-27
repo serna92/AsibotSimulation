@@ -1,11 +1,12 @@
 <KinBody name="glass">
   <Body type="dynamic">
+  <translation>1.183 0.179 0.865</translation>
     <Geom type="cylinder">
       <RotationAxis>1 0 0 -90</RotationAxis>
       <translation>0 0 0</translation>
       <radius>0.047</radius>
       <height>0.100</height>
-      <diffuseColor>0.1 0.1 0.9</diffuseColor>
+      <transparency>1</transparency>
     </Geom>
     <Geom type="sphere">
       <RotationAxis>1 0 0 90</RotationAxis>

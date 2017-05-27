@@ -1,10 +1,9 @@
-<!-- asibot.robot.xml -->
-
 <Robot name="asibotRobot">
-    <KinBody file="./asibot.kinbody.xml"/>
+    <KinBody file="./asibot.kinbody.xml" />
+    <RotationAxis>0 0 1 180</RotationAxis>
+    <translation>1 1.215 0.7491</translation>
     <Manipulator name="asibotManipulator">
         <effector>link5</effector>
         <base>link0</base>
     </Manipulator>
 </Robot>
-
