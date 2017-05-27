@@ -1,117 +1,97 @@
 # Miguel Serna Agudo
-# NIA: 100285275
+# NIA: 100285275  
 
-from AsibotPy import *
+#!/usr/bin/python
 
-rpc = yarp.RpcClient()
+from common_functions import *
 
-rpc.open('/command/ravebot/world')
+def simulation(glassCoords, bottleCoords, robotCoords, wheelchairCoords):
 
-yarp.Network.connect('/command/ravebot/world', '/ravebot/world')
+   dd, pos, vel, enc, mode, axes = initRavebot()
+   env, basemanip = initOpenRave(robotCoords, wheelchairCoords)
 
-#######################################
+   rpc = yarp.RpcClient()
+   rpc.open('/command/ravebot/world')
+   yarp.Network.connect('/command/ravebot/world', '/ravebot/world')
 
-res = yarp.Bottle()
+   grab, release, add, delObjs, whereisTCP, mvRobot, mvWheelchair, mvObj1, mvObj2, add2 = defineCommands(2, bottleCoords, glassCoords, wheelchairCoords, robotCoords)
 
-cmd1 = yarp.Bottle()
+   res = yarp.Bottle()
 
-cmd1.addString('world')
-cmd1.addString('grab')
-cmd1.addString('obj')
-cmd1.addString('bottle')
-cmd1.addInt(1)
+   rpc.write(add, res)
+   rpc.write(add2, res)
 
-cmd2 = yarp.Bottle()
+   rpc.write(mvWheelchair, res)
+   rpc.write(mvRobot, res)
+   rpc.write(mvObj1, res)
+   rpc.write(mvObj2, res)
 
-cmd2.addString('world')
-cmd2.addString('grab')
-cmd2.addString('obj')
-cmd2.addString('bottle')
-cmd2.addInt(0)  
+   #######################################
 
-#######################################
+   rpc.write(whereisTCP, res)
 
-home=[0,0,1.4,0,0]
+   TCPPosition = []
 
-P1=[0.3,0.9,0.6,90,0]
-P_botella=[0.6,0.4,0.5,90,0]
-P_vaso=[0.3,0.9,0.4,90,0]
+   for i in range(0,3):
+      TCPPosition.append(res.get(0).asList().get(i).asDouble())
 
-P2=[0.6,0.4,0.3,90,0]
-P3=[0.7,0.5,0.3,90,0]
+   #######################################
 
-P4=[0.3,0.8,0.4,90,0]
-P5=[0.3,0.8,0.37,90,0]
-P6=[0.3,0.8,0.4,90,-75]
+   home=[0,0,1.4,0,0]
 
-#######################################
+   #######################################
 
-simCart = CartesianClient()
-simCart.open('/ravebot')
-# use '/canbot' for real
+   simCart = CartesianClient()
+   simCart.open('/ravebot')
+   # use '/canbot' for real
 
-#######################################
+   #######################################
 
-print 'hello, robot!'
-simCart.movl(home)  # defaults to 20 s
-simCart.wait()      # wait for movement
-simCart.movj(P1)
-simCart.wait()
-simCart.movj(P_botella)
-simCart.wait()
+   print ('\n' + 'Starting Simulation' + '\n')
 
-simCart.movl(P2)
-simCart.wait()
-simCart.movl(P3)
-simCart.wait()
+   simCart.movl(home)  # defaults to 20 s
+   simCart.wait()      # wait for movement
 
-rpc.write(cmd1, res)	# Agarrar la botella.
+   targetpoints = []
 
-simCart.movl(P2)
-simCart.wait()
-simCart.movl(P_botella)
-simCart.wait()
+   targetpoint1 = calculateTargetpoint(bottleCoords, robotCoords, 0.03, 0.2, 0.2)
 
-simCart.movj(P_vaso)
-simCart.wait()
+   targetpoint2 = []
+   targetpoint2.append(glassCoords[0] - 0.18)		# Targetpoint desired to be at the right of the glass
+   targetpoint2.append(glassCoords[1] - 0.1)
+   targetpoint2.append(glassCoords[2] + 0.03)
+   targetpoint2 = calculateTargetpoint(targetpoint2, robotCoords, 0.03, 0.2, 0.2)
 
-simCart.movl(P4)
-simCart.wait()
-simCart.movl(P5)
-simCart.wait()
+   targetpoints = [targetpoint1, targetpoint2]
 
-simCart.movl(P6)	# Rellenar vaso.
-simCart.wait()
-simCart.movl(P5)
-simCart.wait()
+   if checkTargetPoints(targetpoints) == True:
 
-simCart.movl(P4)
-simCart.wait()
-simCart.movl(P_vaso)
-simCart.wait()
+      movj(targetpoint, axes, mode, pos, simCart, basemanip)
 
-simCart.movj(P_botella)
-simCart.wait()
+      print 'Grabbing bottle'
+      movl(targetpoint, simCart, 0.02, 0.15, 0.05, bottleCoords, TCPPosition, rpc, grab, release, res, 1, 0)	# Grab bottle
 
-simCart.movl(P2)
-simCart.wait()
-simCart.movl(P3)
-simCart.wait()
+      movj(targetpoint2, axes, mode, pos, simCart, basemanip)
+      
+      print 'Filling glass'
+      tiltObj(targetpoint2, simCart, 75)	# Fill glass
 
-rpc.write(cmd2, res)	# Soltar la botella.
+      movj(targetpoint, axes, mode, pos, simCart, basemanip)
 
-simCart.movl(P2)
-simCart.wait()
-simCart.movl(P_botella)
-simCart.wait()
+      print 'Releasing bottle'
+      movl(targetpoint, simCart, 0.02, 0.15, 0.05, bottleCoords, TCPPosition, rpc, grab, release, res, 2, 0)	# Release bottle
 
-simCart.movj(P1)
-simCart.wait()
-simCart.movj(home)
-simCart.wait()
+      movinitial(axes, mode, pos)
+      simCart.wait()
 
-#######################################
+   raw_input('\n' + 'Press Enter to end simulation' + '\n')
 
-print 'done!'
-simCart.close()
+   rpc.write(delObjs, res)
 
+   #######################################
+
+   simCart.close()
+
+
+if __name__ == '__main__':
+   simulation()
