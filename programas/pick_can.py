@@ -56,7 +56,7 @@ def simulation(redCanCoords, robotCoords, wheelchairCoords):
 
    targetpoint2 = []
    targetpoint2.append(wheelchairCoords[0] - 1.48)	# Targetpoint desired to be near user lips
-   targetpoint2.append(wheelchairCoords[1] - 0.45)	# respect to the position of the weelchair
+   targetpoint2.append(wheelchairCoords[1] - 1.17)	# respect to the position of the weelchair
    targetpoint2.append(wheelchairCoords[2] - 0.08)
    targetpoint2.append(90)
    targetpoint2.append(0)
@@ -65,20 +65,20 @@ def simulation(redCanCoords, robotCoords, wheelchairCoords):
 
    if checkTargetPoints(targetpoints) == True:
 
-      movj(targetpoint, axes, mode, pos, simCart, basemanip)
+      movj(targetpoint1, axes, mode, pos, simCart, basemanip)
 
       print 'Grabbing red can'
-      movl(targetpoint, simCart, 0.02, 0.15, 0.05, redCanCoords, TCPPosition, rpc, grab, release, res, 1, 0)	# Grab red can
+      movl(targetpoint1, simCart, 0.02, 0.15, 0.05, redCanCoords, TCPPosition, rpc, grab, release, res, 1, 0)	# Grab red can
 
       movj(targetpoint2, axes, mode, pos, simCart, basemanip)
 
       print 'Giving drink'
       tiltObj(targetpoint2, simCart, 20)	# Give drink
 
-      movj(targetpoint, axes, mode, pos, simCart, basemanip)
+      movj(targetpoint1, axes, mode, pos, simCart, basemanip)
 
       print 'Releasing red can'
-      movl(targetpoint, simCart, 0.02, 0.15, 0.05, redCanCoords, TCPPosition, rpc, grab, release, res, 2, 0)	# Release red can
+      movl(targetpoint1, simCart, 0.02, 0.15, 0.05, redCanCoords, TCPPosition, rpc, grab, release, res, 2, 0)	# Release red can
 
       movinitial(axes, mode, pos)
       simCart.wait()

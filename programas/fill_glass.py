@@ -66,20 +66,20 @@ def simulation(glassCoords, bottleCoords, robotCoords, wheelchairCoords):
 
    if checkTargetPoints(targetpoints) == True:
 
-      movj(targetpoint, axes, mode, pos, simCart, basemanip)
+      movj(targetpoint1, axes, mode, pos, simCart, basemanip)
 
       print 'Grabbing bottle'
-      movl(targetpoint, simCart, 0.02, 0.15, 0.05, bottleCoords, TCPPosition, rpc, grab, release, res, 1, 0)	# Grab bottle
+      movl(targetpoint1, simCart, 0.02, 0.15, 0.05, bottleCoords, TCPPosition, rpc, grab, release, res, 1, 0)	# Grab bottle
 
       movj(targetpoint2, axes, mode, pos, simCart, basemanip)
       
       print 'Filling glass'
       tiltObj(targetpoint2, simCart, 75)	# Fill glass
 
-      movj(targetpoint, axes, mode, pos, simCart, basemanip)
+      movj(targetpoint1, axes, mode, pos, simCart, basemanip)
 
       print 'Releasing bottle'
-      movl(targetpoint, simCart, 0.02, 0.15, 0.05, bottleCoords, TCPPosition, rpc, grab, release, res, 2, 0)	# Release bottle
+      movl(targetpoint1, simCart, 0.02, 0.15, 0.05, bottleCoords, TCPPosition, rpc, grab, release, res, 2, 0)	# Release bottle
 
       movinitial(axes, mode, pos)
       simCart.wait()

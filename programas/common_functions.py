@@ -167,7 +167,7 @@ def movj(targetpoint, axes, mode, pos, simCart, basemanip):
 
    n = traj.GetNumWaypoints()
 
-   raveLogInfo('traj has %d waypoints'%(traj.GetNumWaypoints()))
+   print('INFO: Trajectory has %d waypoints'%(traj.GetNumWaypoints()))
 
    for i in range(0,axes): mode.setPositionMode(i)
 
@@ -184,14 +184,22 @@ def movj(targetpoint, axes, mode, pos, simCart, basemanip):
       
    while True:
       yarp.Time.delay(0.5)
-      if pos.checkMotionDone():
-         break
+      motionStatus = yarp.BVector(1)
+    
+      if not pos.checkMotionDone(motionStatus):
+          print('Unable to request motion status')
+          break
+    
+      if motionStatus[0]:
+          break
+
+   print('Done!')
 
 
 def movl(targetpoint, simCart, distance_offset_x, distance_offset_y, height_offset, objPosition, TCPPosition, rpc, grab, release, res, action, degrees):
 
 
-   if ((TCPPosition[0] - objPosition[0]) < -0.02):
+   if ((TCPPosition[0] - objPosition[0]) < -0.03):
 
       targetpoint[0] -= distance_offset_x
       targetpoint[1] += distance_offset_y
@@ -221,7 +229,7 @@ def movl(targetpoint, simCart, distance_offset_x, distance_offset_y, height_offs
       simCart.movl(targetpoint)
       simCart.wait()
 
-   elif ((TCPPosition[0] - objPosition[0]) <= 0.02 and (TCPPosition[0] - objPosition[0]) >= -0.02):
+   elif ((TCPPosition[0] - objPosition[0]) <= 0.03 and (TCPPosition[0] - objPosition[0]) >= -0.03):
 
       targetpoint[1] += distance_offset_y
 
