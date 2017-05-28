@@ -43,6 +43,7 @@ root.title("Asibot Task Simulator")
 
 def placedObjsLabel(selectedOption, x1, y1):
 
+
    global placedObjs
    coords1 = ""
 
@@ -66,7 +67,9 @@ def placedObjsLabel(selectedOption, x1, y1):
 
       placedObjs.config(text = "")
 
+
 def placedObjsLabel2(selectedOption, x2, y2):
+
 
    global placedObjs2
    coords2 = ""
@@ -81,6 +84,7 @@ def placedObjsLabel2(selectedOption, x2, y2):
 
 
 def placeMainObj(event):
+
 
    global canvas
    global selectedOption
@@ -124,6 +128,7 @@ def placeMainObj(event):
 
 def placeSecondObj(event):
 
+
    global canvas
    global selectedOption
    global greenCircle
@@ -160,6 +165,8 @@ def placeSecondObj(event):
 
 
 def pickcan():
+
+
     global selectedOption
     global canvas
     global taskname, placedObjsLabel, placedObjsLabel2
@@ -180,6 +187,8 @@ def pickcan():
 
 
 def fillglass():
+
+
     global selectedOption
     global canvas
     global taskname, placedObjsLabel, placedObjsLabel2
@@ -200,6 +209,8 @@ def fillglass():
 
 
 def movedish():
+
+
     global selectedOption
     global canvas
     global taskname, placedObjsLabel, placedObjsLabel2
@@ -220,6 +231,8 @@ def movedish():
 
 
 def start():
+
+
     global selectedOption
     global x1, x2, y1, y2
     global task1, task2, task3

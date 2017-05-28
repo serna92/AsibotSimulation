@@ -37,6 +37,7 @@ def mvKinbody(kinBodyName, coords, env):
 
 def addKinbody(kinBodyFile, env):
 
+
    objKinBody = env.ReadKinBodyXMLFile(kinBodyFile)
    env.Add(objKinBody, True)
 
@@ -79,13 +80,13 @@ def refreshOpenrave(task, action, rpc, res, whereisObj, env):
    for i in range(0,3):
       objPosition.append(res.get(0).asList().get(i).asDouble())
 
-   mvKinbody(objname, objPosition, env)
-
    if action == 1:
 
+      mvKinbody(objname, objPosition, env)
       grabKinbody(objname, env)
    else:
       releaseKinbody(objname, env)
+      mvKinbody(objname, objPosition, env)
 
 
 def initOpenRave(task, objCoords, objCoords2, wheelchairCoords, robotCoords):
@@ -93,7 +94,6 @@ def initOpenRave(task, objCoords, objCoords2, wheelchairCoords, robotCoords):
 
    env = Environment()
    env.Load('AsibotSimulation/entornoAsibot/asibot_kitchen.env.xml')
-   env.SetViewer('qtcoin')
    mvKinbody('asibot', robotCoords, env)
    mvKinbody('wheelchair', wheelchairCoords, env)
 
@@ -120,6 +120,7 @@ def initOpenRave(task, objCoords, objCoords2, wheelchairCoords, robotCoords):
 
 def defineCommands(task, ObjCoords, ObjCoords2, wheelchairCoords, robotCoords):
 
+
    grab = yarp.Bottle()
    release = yarp.Bottle()
    add = yarp.Bottle()
@@ -144,7 +145,6 @@ def defineCommands(task, ObjCoords, ObjCoords2, wheelchairCoords, robotCoords):
    else:
 
       objname = 'dish'
-
 
    grab.addString('world')
    grab.addString('grab')
@@ -261,24 +261,38 @@ def movj(targetpoint, axes, mode, pos, simCart, basemanip, env):
       pos.positionMove(1,waypoint[1])
       pos.positionMove(0,waypoint[0])
       
-   while True:
-      yarp.Time.delay(0.5)
-      motionStatus = yarp.BVector(1)
+      while True:
+         yarp.Time.delay(0.1)
+         motionStatus = yarp.BVector(1)
     
-      if not pos.checkMotionDone(motionStatus):
-          print('Unable to request motion status')
-          break
+         if not pos.checkMotionDone(motionStatus):
+            print('Unable to request motion status')
+            break
     
-      if motionStatus[0]:
-          break
+         if motionStatus[0]:
+            break
 
    print('Done!')
 
 
-def movl(targetpoint, simCart, distance_offset_x, distance_offset_y, height_offset, objPosition, TCPPosition, rpc, grab, release, res, action, objKinbody, degrees):
+def movl(targetpoint, simCart, distance_offset_x, distance_offset_y, height_offset, rpc, grab, release, whereisTCP, whereisObj, res, action, objKinbody, degrees):
 
+   
+   rpc.write(whereisTCP, res)
 
-   if ((TCPPosition[0] - objPosition[0]) < -0.03):
+   TCPPosition = []
+
+   for i in range(0,3):
+      TCPPosition.append(res.get(0).asList().get(i).asDouble())
+
+   rpc.write(whereisObj, res)
+
+   objPosition = []
+
+   for i in range(0,3):
+      objPosition.append(res.get(0).asList().get(i).asDouble())
+
+   if (TCPPosition[0] - objPosition[0] < -0.02):
 
       targetpoint[0] -= distance_offset_x
       targetpoint[1] += distance_offset_y
@@ -306,7 +320,7 @@ def movl(targetpoint, simCart, distance_offset_x, distance_offset_y, height_offs
       simCart.movl(targetpoint)
       simCart.wait()
 
-   elif ((TCPPosition[0] - objPosition[0]) <= 0.03 and (TCPPosition[0] - objPosition[0]) >= -0.03):
+   elif (TCPPosition[0] - objPosition[0] <= 0.02 and TCPPosition[0] - objPosition[0] >= -0.02):
 
       targetpoint[1] += distance_offset_y
 
@@ -382,19 +396,17 @@ def calculateTargetpoint(objPosition, robotPosition, distance_offset_x, distance
 
    targetpoint = []
 
-   if ((robotPosition[0] - objPosition[0]) < -0.02):
+   if (robotPosition[0] - objPosition[0] < -0.02):
       targetpoint.append(robotPosition[0] - objPosition[0] + distance_offset_x)
       targetpoint.append(robotPosition[1] - objPosition[1] - distance_offset_y)
 
-   elif ((robotPosition[0] - objPosition[0]) <= 0.02 and (robotPosition[0] - objPosition[0]) >= -0.02):
+   elif (robotPosition[0] - objPosition[0] <= 0.02 and robotPosition[0] - objPosition[0] >= -0.02):
       targetpoint.append(robotPosition[0] - objPosition[0])
       targetpoint.append(robotPosition[1] - objPosition[1] - distance_offset_y)
 
    else:
       targetpoint.append(robotPosition[0] - objPosition[0] - distance_offset_x)
       targetpoint.append(robotPosition[1] - objPosition[1] - distance_offset_y)
-
-   
 
    targetpoint.append(objPosition[2] - robotPosition[2] + height_offset)
 
@@ -403,13 +415,19 @@ def calculateTargetpoint(objPosition, robotPosition, distance_offset_x, distance
    return targetpoint
 
 
-def checkTargetPoints(targetpoints):
+def checkTargetPoints(targetpoints, isTask2, glassCoords, bottleCoords):
+
 
    for i in range (0, len(targetpoints)):
       for j in range (0, len(targetpoints[i])):
          if math.isnan(targetpoints[i][j]):
-            print ('\n' + 'ERROR: Targetpoint' + str(i) + 'is out of range' + '\n')
+            print ('\n' + 'ERROR: Targetpoint' + str(i) + ' is out of range' + '\n')
             return False
+
+   if isTask2:
+      if bottleCoords[0] - glassCoords[0] < 0.08 and bottleCoords[0] - glassCoords[0] > -0.08 and bottleCoords[1] < glassCoords[1]:
+         print ('\n' + 'ERROR: Targetpoint' + str(i) + ' is out of range' + '\n')
+	 return False
 
    return True
 

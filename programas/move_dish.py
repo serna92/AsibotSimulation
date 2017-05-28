@@ -5,7 +5,9 @@
 
 from common_functions import *
 
+
 def simulation(dishCoords, robotCoords, wheelchairCoords):
+
 
    dd, pos, vel, enc, mode, axes = initRavebot()
    env, basemanip = initOpenRave(3, dishCoords, [], wheelchairCoords, robotCoords)
@@ -59,19 +61,21 @@ def simulation(dishCoords, robotCoords, wheelchairCoords):
 
    targetpoints = [targetpoint1, targetpoint2]
 
-   if checkTargetPoints(targetpoints) == True:
+   if checkTargetPoints(targetpoints, 0, [], []) == True:
 
-      movj(targetpoint, axes, mode, pos, simCart, basemanip)
+      movj(targetpoint1, axes, mode, pos, simCart, basemanip, env)
 
       print 'Grabbing dish'
-      movl(targetpoint1, simCart, 0.01, 0.15, 0.08, dishCoords, TCPPosition, rpc, grab, release, res, 1, 'dish', 0)    # Grab dish
-      refreshOpenrave(1, 1, rpc, res, whereisObj, env) 
+      # Grab dish
+      movl(targetpoint1, simCart, 0.02, 0.15, 0.08, rpc, grab, release, whereisTCP, whereisObj, res, 1, 'dish', 0)
+      refreshOpenrave(3, 1, rpc, res, whereisObj, env) 
 
       movj(targetpoint2, axes, mode, pos, simCart, basemanip, env)
 
       print 'Releasing dish'
-      movl(targetpoint2, simCart, 0, 0.38, 0.12, dishCoords, TCPPosition, rpc, grab, release, res, 2, 'dish', 0)    # Release dish
-      refreshOpenrave(1, 2, rpc, res, whereisObj, env)
+      # Release dish
+      movl(targetpoint2, simCart, 0, 0.38, 0.12, rpc, grab, release, whereisTCP, whereisObj, res, 2, 'dish', 0)
+      refreshOpenrave(3, 2, rpc, res, whereisObj, env)
 
       movinitial(axes, mode, pos)
 
@@ -82,7 +86,7 @@ def simulation(dishCoords, robotCoords, wheelchairCoords):
    rpc.write(delObjs, res)
 
    #######################################
-
+   env.Destroy()
    simCart.close()
 
 

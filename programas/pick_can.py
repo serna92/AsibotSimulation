@@ -5,7 +5,9 @@
 
 from common_functions import *
 
+
 def simulation(redCanCoords, robotCoords, wheelchairCoords):
+
 
    dd, pos, vel, enc, mode, axes = initRavebot()
    env, basemanip = initOpenRave(1, redCanCoords, [], wheelchairCoords, robotCoords)
@@ -23,15 +25,6 @@ def simulation(redCanCoords, robotCoords, wheelchairCoords):
    rpc.write(mvWheelchair, res)
    rpc.write(mvRobot, res)
    rpc.write(mvObj1, res)
-
-   #######################################
-
-   rpc.write(whereisTCP, res)
-
-   TCPPosition = []
-
-   for i in range(0,3):
-      TCPPosition.append(res.get(0).asList().get(i).asDouble())
 
    #######################################
 
@@ -63,12 +56,13 @@ def simulation(redCanCoords, robotCoords, wheelchairCoords):
 
    targetpoints = [targetpoint1, targetpoint2]
 
-   if checkTargetPoints(targetpoints) == True:
+   if checkTargetPoints(targetpoints, 0, [], []) == True:
 
       movj(targetpoint1, axes, mode, pos, simCart, basemanip, env)
 
       print 'Grabbing red can'
-      movl(targetpoint1, simCart, 0.02, 0.15, 0.05, redCanCoords, TCPPosition, rpc, grab, release, res, 1, 'redCan', 0)	  # Grab red can
+      # Grab red can
+      movl(targetpoint1, simCart, 0.02, 0.15, 0.05, rpc, grab, release, whereisTCP, whereisObj, res, 1, 'redCan', 0)
       refreshOpenrave(1, 1, rpc, res, whereisObj, env)
 
       movj(targetpoint2, axes, mode, pos, simCart, basemanip, env)
@@ -79,7 +73,8 @@ def simulation(redCanCoords, robotCoords, wheelchairCoords):
       movj(targetpoint1, axes, mode, pos, simCart, basemanip, env)
 
       print 'Releasing red can'
-      movl(targetpoint1, simCart, 0.02, 0.15, 0.05, redCanCoords, TCPPosition, rpc, grab, release, res, 2, 'redCan', 0)   # Release red can
+      # Release red can
+      movl(targetpoint1, simCart, 0.02, 0.15, 0.05, rpc, grab, release, whereisTCP, whereisObj, res, 2, 'redCan', 0)
       refreshOpenrave(1, 2, rpc, res, whereisObj, env)
 
       movinitial(axes, mode, pos)
@@ -90,7 +85,7 @@ def simulation(redCanCoords, robotCoords, wheelchairCoords):
    rpc.write(delObjs, res)
 
    #######################################
-
+   env.Destroy()
    simCart.close()
 
 

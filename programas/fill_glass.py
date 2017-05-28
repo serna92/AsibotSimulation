@@ -5,7 +5,9 @@
 
 from common_functions import *
 
+
 def simulation(glassCoords, bottleCoords, robotCoords, wheelchairCoords):
+
 
    dd, pos, vel, enc, mode, axes = initRavebot()
    env, basemanip = initOpenRave(2, bottleCoords, glassCoords, wheelchairCoords, robotCoords)
@@ -25,15 +27,6 @@ def simulation(glassCoords, bottleCoords, robotCoords, wheelchairCoords):
    rpc.write(mvRobot, res)
    rpc.write(mvObj1, res)
    rpc.write(mvObj2, res)
-
-   #######################################
-
-   rpc.write(whereisTCP, res)
-
-   TCPPosition = []
-
-   for i in range(0,3):
-      TCPPosition.append(res.get(0).asList().get(i).asDouble())
 
    #######################################
 
@@ -64,13 +57,14 @@ def simulation(glassCoords, bottleCoords, robotCoords, wheelchairCoords):
 
    targetpoints = [targetpoint1, targetpoint2]
 
-   if checkTargetPoints(targetpoints) == True:
+   if checkTargetPoints(targetpoints, 1, glassCoords, bottleCoords) == True:
 
       movj(targetpoint1, axes, mode, pos, simCart, basemanip, env)
 
       print 'Grabbing bottle'
-      movl(targetpoint1, simCart, 0.02, 0.15, 0.05, bottleCoords, TCPPosition, rpc, grab, release, res, 1, 'bottle', 0)	  # Grab bottle
-      refreshOpenrave(1, 1, rpc, res, whereisObj, env)
+      # Grab bottle
+      movl(targetpoint1, simCart, 0.02, 0.15, 0.05, rpc, grab, release, whereisTCP, whereisObj, res, 1, 'bottle', 0)
+      refreshOpenrave(2, 1, rpc, res, whereisObj, env)
 
       movj(targetpoint2, axes, mode, pos, simCart, basemanip, env)
       
@@ -80,8 +74,9 @@ def simulation(glassCoords, bottleCoords, robotCoords, wheelchairCoords):
       movj(targetpoint1, axes, mode, pos, simCart, basemanip, env)
 
       print 'Releasing bottle'
-      movl(targetpoint1, simCart, 0.02, 0.15, 0.05, bottleCoords, TCPPosition, rpc, grab, release, res, 2, 'bottle', 0)	  # Release bottle
-      refreshOpenrave(1, 2, rpc, res, whereisObj, env)
+      # Release bottle
+      movl(targetpoint1, simCart, 0.02, 0.15, 0.05, rpc, grab, release, whereisTCP, whereisObj, res, 2, 'bottle', 0)
+      refreshOpenrave(2, 2, rpc, res, whereisObj, env)
 
       movinitial(axes, mode, pos)
       simCart.wait()
@@ -91,7 +86,7 @@ def simulation(glassCoords, bottleCoords, robotCoords, wheelchairCoords):
    rpc.write(delObjs, res)
 
    #######################################
-
+   env.Destroy()
    simCart.close()
 
 
