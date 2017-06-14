@@ -254,8 +254,13 @@ def start():
 
     if selectedOption == 3 and x1 != -1:
 
-	print "\n" + "WARNING: requires a running instance of cartesianServer" + "\n"
-	task3.simulation([x1, y1, 0.865], [1, 1.215, 0.7491], [1.3, 1.25, 0.7])
+	if y1 > 0.15:
+	
+		print "\n" + "WARNING: requires a running instance of cartesianServer" + "\n"
+		task3.simulation([x1, y1, 0.865], [1, 1.215, 0.7491], [1.3, 1.25, 0.7])
+        else:
+
+	   print "\n" + "Error: Dish is too near the wall" + "\n" 
     
 
 # Loading images.
