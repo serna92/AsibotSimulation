@@ -17,9 +17,9 @@ import time
 
 import imp
 
-task1 = imp.load_source('task1', 'AsibotSimulation/programas/pick_can.py')
-task2 = imp.load_source('task2', 'AsibotSimulation/programas/fill_glass.py')
-task3 = imp.load_source('task3', 'AsibotSimulation/programas/move_dish.py')
+task1 = imp.load_source('task1', 'pick_can.py')
+task2 = imp.load_source('task2', 'fill_glass.py')
+task3 = imp.load_source('task3', 'move_dish.py')
 
 
 # Global variables.
@@ -111,15 +111,16 @@ def placeMainObj(event):
 
       if event.y < 182 and event.y > 40:
          if event.x < (44062 - 33 * event.y) / 142 and event.x > (13390 - 33 * event.y) / 142:
-            redCircle = canvas.create_oval(event.x - 2, event.y - 2, event.x + 2, event.y + 2, fill = "red")
-	    x1 = round((400 - event.x) * scale_x + x_offset, 3)
-            y1 = round(event.y * scale_y + y_offset, 3)
-	    placedObjsLabel(selectedOption, x1, y1)
+
+	   redCircle = canvas.create_oval(event.x - 2, event.y - 2, event.x + 2, event.y + 2, fill = "red")
+	   x1 = round((400 - event.x) * scale_x + x_offset, 3)
+           y1 = round(event.y * scale_y + y_offset, 3)
+	   placedObjsLabel(selectedOption, x1, y1)
 
          else:
-	    x1 = -1
-            y1 = -1
-	    placedObjsLabel(selectedOption, x1, y1)
+	    	x1 = -1
+            	y1 = -1
+	    	placedObjsLabel(selectedOption, x1, y1)
       else:
          x1 = -1
 	 y1 = -1
@@ -266,13 +267,13 @@ def start():
 # Loading images.
 
 
-movedish_img = ImageTk.PhotoImage(Image.open("AsibotSimulation/asibotGUI/movedish.jpg").resize((150, 100), Image.ANTIALIAS))
+movedish_img = ImageTk.PhotoImage(Image.open("../asibotGUI/movedish.jpg").resize((150, 100), Image.ANTIALIAS))
 
-pickcan_img = ImageTk.PhotoImage(Image.open("AsibotSimulation/asibotGUI/pickcan.jpg").resize((150, 100), Image.ANTIALIAS))
+pickcan_img = ImageTk.PhotoImage(Image.open("../asibotGUI/pickcan.jpg").resize((150, 100), Image.ANTIALIAS))
 
-fillglass_img = ImageTk.PhotoImage(Image.open("AsibotSimulation/asibotGUI/fillglass.jpg").resize((150, 100), Image.ANTIALIAS))
+fillglass_img = ImageTk.PhotoImage(Image.open("../asibotGUI/fillglass.jpg").resize((150, 100), Image.ANTIALIAS))
 
-imgCanvas = ImageTk.PhotoImage(Image.open("AsibotSimulation/asibotGUI/scene.png").resize((400, 196), Image.ANTIALIAS))
+imgCanvas = ImageTk.PhotoImage(Image.open("../asibotGUI/scene.png").resize((400, 196), Image.ANTIALIAS))
 
 
 # Creating GUI.

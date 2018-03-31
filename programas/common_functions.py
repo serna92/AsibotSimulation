@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
-from AsibotPy import *
+#from AsibotPy import *
+import openravepy
 from openravepy import *
 import math
 
